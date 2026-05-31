@@ -1,0 +1,291 @@
+﻿@model IEnumerable<QuanLySinhVien.Models.SinhVien>
+@{
+    ViewData["Title"] = "Danh sách sinh viên";
+    string cn = ViewBag.MaChuyenNganh ?? "";
+    string selectedKhoaHoc = ViewBag.KhoaHoc ?? "";
+}
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-theme/0.1.0-beta.10/select2-bootstrap.min.css" rel="stylesheet" />
+
+<style>
+    .table-head-fixed th {
+        background-color: #343a40 !important;
+        color: #ffffff !important;
+        border-bottom: 0 !important;
+        box-shadow: inset 0 -1px 0 #dee2e6;
+        z-index: 10;
+    }
+</style>
+
+<div class="card">
+    <div class="card-header">
+        <form method="get" action="/SinhVien/Index">
+            <div class="row align-items-center">
+
+                <div class="col-md-2 mb-2">
+                    <input type="text" name="tuKhoa" value="@ViewBag.TuKhoa" class="form-control" placeholder="Tìm tên/MSSV...">
+                </div>
+
+                <div class="col-md-2 mb-2">
+                    <select name="maKhoa" id="filterKhoa" class="form-control select2" style="width: 100%;">
+                        <option value="">-- Tất cả khoa --</option>
+                        @if (ViewBag.DanhSachKhoa != null)
+                        {
+                            foreach (var khoa in ViewBag.DanhSachKhoa)
+                            {
+                                <option value="@khoa.MaKhoa" selected="@(ViewBag.MaKhoa == khoa.MaKhoa ? "selected" : null)">
+                                    @khoa.TenKhoa
+                                </option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-2 mb-2" id="divFilterCN" style="display:@(ViewBag.MaKhoa == "SP" ? "block" : "none")">
+                    <select name="maChuyenNganh" id="filterCN" class="form-control select2" style="width: 100%;">
+                        <option value="">-- Tất cả CN --</option>
+                        <option value="Toan" selected="@(cn == "Toan" ? "selected" : null)">SP Toán</option>
+                        <option value="Van" selected="@(cn == "Van" ? "selected" : null)">SP Ngữ Văn</option>
+                        <option value="Anh" selected="@(cn == "Anh" ? "selected" : null)">SP Tiếng Anh</option>
+                        <option value="Ly" selected="@(cn == "Ly" ? "selected" : null)">SP Vật Lý</option>
+                        <option value="Hoa" selected="@(cn == "Hoa" ? "selected" : null)">SP Hóa Học</option>
+                        <option value="Sinh" selected="@(cn == "Sinh" ? "selected" : null)">SP Sinh Học</option>
+                        <option value="Dia" selected="@(cn == "Dia" ? "selected" : null)">SP Địa Lý</option>
+                        <option value="Su" selected="@(cn == "Su" ? "selected" : null)">SP Lịch Sử</option>
+                        <option value="Tin" selected="@(cn == "Tin" ? "selected" : null)">SP Tin Học</option>
+                        <option value="GDCD" selected="@(cn == "GDCD" ? "selected" : null)">SP GDCD</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2 mb-2">
+                    <select name="khoaHoc" id="filterKhoaHoc" class="form-control select2" style="width: 100%;">
+                        <option value="" selected="@(string.IsNullOrWhiteSpace(selectedKhoaHoc) ? "selected" : null)">
+                            -- Tất cả khóa --
+                        </option>
+
+                        @if (ViewBag.DSKhoaHoc != null)
+                        {
+                            foreach (var khoaHocItem in ViewBag.DSKhoaHoc)
+                            {
+                                string maKhoaHoc = Convert.ToString(khoaHocItem) ?? "";
+
+                                <option value="@maKhoaHoc" selected="@(selectedKhoaHoc == maKhoaHoc ? "selected" : null)">
+                                    Khóa @maKhoaHoc
+                                </option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-2 mb-2">
+                    <select name="maLop" id="filterLop" class="form-control select2" style="width: 100%;">
+                        <option value="">-- Tất cả lớp --</option>
+                        @if (ViewBag.DanhSachLop != null)
+                        {
+                            foreach (var lop in ViewBag.DanhSachLop)
+                            {
+                                <option value="@lop.MaLop" selected="@(ViewBag.MaLop == lop.MaLop ? "selected" : null)">
+                                    @lop.TenLop
+                                </option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-2 mb-2">
+                    <select name="trangThai" class="form-control select2" style="width: 100%;">
+                        <option value="">-- Trạng thái --</option>
+                        @{
+                            string tt = ViewBag.TrangThai ?? "";
+                        }
+                        <option value="Đang học" selected="@(tt == "Đang học" ? "selected" : null)">Đang học</option>
+                        <option value="Bảo lưu" selected="@(tt == "Bảo lưu" ? "selected" : null)">Bảo lưu</option>
+                        <option value="Đã tốt nghiệp" selected="@(tt == "Đã tốt nghiệp" ? "selected" : null)">Đã tốt nghiệp</option>
+                        <option value="Thôi học" selected="@(tt == "Thôi học" ? "selected" : null)">Thôi học</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2 mb-2 d-flex">
+                    <button type="submit" class="btn btn-primary flex-fill mr-1" title="Lọc">
+                        <i class="fas fa-filter"></i> Lọc
+                    </button>
+                    <a href="/SinhVien/Index" class="btn btn-default flex-fill text-center" title="Xóa lọc">
+                        <i class="fas fa-sync"></i> Xoá
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12 text-left">
+                    @if (User.IsInRole("Admin") || User.IsInRole("CanBo"))
+                    {
+                        <a href="/SinhVien/Create" class="btn btn-success">
+                            <i class="fas fa-plus mr-1"></i> Thêm sinh viên
+                        </a>
+                    }
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="card-body p-0 table-responsive" style="max-height: 550px; overflow-y: auto;">
+        <table class="table table-bordered table-striped table-hover text-nowrap table-head-fixed mb-0">
+            <thead class="thead-dark">
+                <tr>
+                    <th style="width:110px">MSSV</th>
+                    <th>Họ và tên</th>
+                    <th style="width:120px">Ngày sinh</th>
+                    <th style="width:120px">Lớp</th>
+                    <th style="width:110px">SĐT</th>
+                    <th style="width:120px">Trạng thái</th>
+                    <th style="width:150px" class="text-center">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-5">
+                            <i class="fas fa-search fa-3x mb-3 d-block text-secondary"></i>
+                            <h5 class="mb-1">Chưa có dữ liệu sinh viên.</h5>
+                            <p class="mb-0">Vui lòng sử dụng bộ lọc bên trên để tìm kiếm (Ví dụ: Chọn Khoa, Lớp hoặc Gõ Tên).</p>
+                        </td>
+                    </tr>
+                }
+
+                @foreach (var sv in Model)
+                {
+                    <tr>
+                        <td><code>@sv.Mssv</code></td>
+                        <td>@sv.HoTen</td>
+                        <td>
+                            @if (sv.NgaySinh != null)
+                            {
+                                @sv.NgaySinh.ToString("dd/MM/yyyy")
+                            }
+                        </td>
+                        <td>@sv.MaLopNavigation?.TenLop</td>
+                        <td>@sv.SoDienThoai</td>
+                        <td>
+                            @{
+                                string badgeClass = "badge-secondary";
+                                if (sv.TrangThai == "Đang học") badgeClass = "badge-success";
+                                else if (sv.TrangThai == "Bảo lưu") badgeClass = "badge-warning";
+                                else if (sv.TrangThai == "Thôi học") badgeClass = "badge-danger";
+                                else if (sv.TrangThai == "Đã tốt nghiệp") badgeClass = "badge-info";
+                            }
+                            <span class="badge @badgeClass">@sv.TrangThai</span>
+                        </td>
+                        <td class="text-center">
+                            <a href="/SinhVien/Detail/@sv.Mssv" class="btn btn-info btn-sm" title="Xem">
+                                <i class="fas fa-eye"></i>
+                            </a>
+
+                            @if (User.IsInRole("Admin") || User.IsInRole("CanBo"))
+                            {
+                                <a href="/SinhVien/Edit/@sv.Mssv" class="btn btn-warning btn-sm" title="Sửa">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <form method="post" action="/SinhVien/Delete/@sv.Mssv" style="display:inline-block" onsubmit="return confirm('Xoá sinh viên @sv.HoTen?')">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-danger btn-sm" title="Xoá">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                }
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card-footer clearfix">
+        <div class="float-left pt-1">
+            <small class="text-muted">Tổng: <strong>@ViewBag.TongSo</strong> sinh viên</small>
+        </div>
+
+        @if (ViewBag.TongTrang > 1)
+        {
+            <ul class="pagination pagination-sm float-right mb-0">
+                <li class="page-item @(ViewBag.Trang <= 1 ? "disabled" : "")">
+                    <a class="page-link" href="/SinhVien/Index?trang=@(ViewBag.Trang - 1)&tuKhoa=@ViewBag.TuKhoa&maLop=@ViewBag.MaLop&maKhoa=@ViewBag.MaKhoa&maChuyenNganh=@ViewBag.MaChuyenNganh&trangThai=@ViewBag.TrangThai&khoaHoc=@selectedKhoaHoc">«</a>
+                </li>
+
+                @for (int i = 1; i <= ViewBag.TongTrang; i++)
+                {
+                    <li class="page-item @(i == ViewBag.Trang ? "active" : "")">
+                        <a class="page-link" href="/SinhVien/Index?trang=@i&tuKhoa=@ViewBag.TuKhoa&maLop=@ViewBag.MaLop&maKhoa=@ViewBag.MaKhoa&maChuyenNganh=@ViewBag.MaChuyenNganh&trangThai=@ViewBag.TrangThai&khoaHoc=@selectedKhoaHoc">@i</a>
+                    </li>
+                }
+
+                <li class="page-item @(ViewBag.Trang >= ViewBag.TongTrang ? "disabled" : "")">
+                    <a class="page-link" href="/SinhVien/Index?trang=@(ViewBag.Trang + 1)&tuKhoa=@ViewBag.TuKhoa&maLop=@ViewBag.MaLop&maKhoa=@ViewBag.MaKhoa&maChuyenNganh=@ViewBag.MaChuyenNganh&trangThai=@ViewBag.TrangThai&khoaHoc=@selectedKhoaHoc">»</a>
+                </li>
+            </ul>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+        // KÍCH HOẠT TÍNH NĂNG GÕ ĐỂ TÌM KIẾM (SELECT2)
+        $('.select2').select2({
+        theme: "bootstrap",
+        width: '100%'
+        });
+
+        // BẮT SỰ KIỆN KHI ĐỔI KHOA HOẶC ĐỔI KHÓA BẰNG AJAX
+        $('#filterKhoa, #filterKhoaHoc').on('change', function () {
+        var selKhoa = $('#filterKhoa').val();
+        var selKhoaHoc = $('#filterKhoaHoc').val();
+        var divCN = document.getElementById('divFilterCN');
+        var filterLop = $('#filterLop');
+
+        // 1. Xử lý logic hiện khoa Sư Phạm (Chỉ chạy khi đổi ô Khoa)
+        if ($(this).attr('id') === 'filterKhoa') {
+        if (selKhoa === 'SP') {
+        divCN.style.display = 'block';
+        } else {
+        divCN.style.display = 'none';
+        $('#filterCN').val('').trigger('change.select2');
+        }
+        }
+
+        // 2. Logic gọi AJAX lấy Lớp theo Khoa và Khóa
+        filterLop.empty();
+        filterLop.append('<option value="">-- Tất cả lớp --</option>');
+
+        $.ajax({
+        url: '/SinhVien/GetLopByKhoa',
+        type: 'GET',
+        data: {
+        maKhoa: selKhoa,
+        khoaHoc: selKhoaHoc
+        },
+        success: function (data) {
+        $.each(data, function (index, item) {
+        filterLop.append($('<option>', {
+        value: item.maLop,
+        text: item.tenLop
+        }));
+        });
+
+        filterLop.trigger('change.select2');
+        },
+        error: function () {
+        console.log('Lỗi không lấy được danh sách lớp!');
+        }
+        });
+        });
+        });
+    </script>
+}

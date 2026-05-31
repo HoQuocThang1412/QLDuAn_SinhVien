@@ -1,0 +1,282 @@
+﻿@{
+    ViewData["Title"] = "Đăng ký học phần";
+    var sv = ViewBag.SinhVien as QuanLySinhVien.Models.SinhVien;
+    var daDangKy = ViewBag.DaDangKy as List<QuanLySinhVien.Models.DangKyHoc> ?? new List<QuanLySinhVien.Models.DangKyHoc>();
+    
+    var lopMo = ViewBag.LopMo as List<QuanLySinhVien.Models.LopHocPhan> ?? new List<QuanLySinhVien.Models.LopHocPhan>();
+    var lopMoKhacTatCa = ViewBag.LopMoKhacTatCa as List<QuanLySinhVien.Models.LopHocPhan> ?? new List<QuanLySinhVien.Models.LopHocPhan>();
+    
+    var listTrung = ViewBag.ListMaLhpTrung as List<string> ?? new List<string>();
+    
+    // 🛑 Lấy Tự điển Sĩ số từ Controller
+    var dictSiSo = ViewBag.DictSiSo as Dictionary<string, int> ?? new Dictionary<string, int>();
+}
+
+<div class="card card-outline card-primary shadow-sm">
+    <div class="card-header">
+        <h3 class="card-title"><strong><i class="fas fa-edit text-primary mr-1"></i> CỔNG ĐĂNG KÝ HỌC PHẦN</strong></h3>
+    </div>
+    
+    <div class="card-body">
+        <form asp-action="Index" method="get" class="row mb-4 border-bottom pb-3">
+            @if (User.IsInRole("Admin") || User.IsInRole("CanBo"))
+            {
+                <div class="col-md-3 mb-2">
+                    <label class="font-weight-bold">Mã Sinh Viên:</label>
+                    <div class="input-group">
+                        <input type="text" name="mssv" class="form-control" value="@ViewBag.Mssv" required placeholder="Nhập MSSV..." />
+                    </div>
+                </div>
+            }
+            <div class="col-md-3 mb-2">
+                <label class="font-weight-bold">Học kỳ đăng ký:</label>
+                <select name="maHocKy" class="form-control" required onchange="this.form.submit()">
+                    <option value="">-- Chọn học kỳ --</option>
+                    @if (ViewBag.DanhSachHK != null)
+                    {
+                        foreach (var hk in ViewBag.DanhSachHK)
+                        {
+                            <option value="@hk.MaHocKy" selected="@(ViewBag.MaHocKy == hk.MaHocKy)">@hk.TenHocKy</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-4 mb-2">
+                <label class="font-weight-bold">Khoa/Ngành quản lý:</label>
+                <select class="form-control bg-light" disabled>
+                    @if (ViewBag.DanhSachKhoa != null)
+                    {
+                        foreach (var khoa in ViewBag.DanhSachKhoa)
+                        {
+                            <option value="@khoa.MaKhoa" selected="@(ViewBag.MaKhoa == khoa.MaKhoa ? "selected" : null)">@khoa.TenKhoa</option>
+                        }
+                    }
+                </select>
+                <input type="hidden" name="maKhoa" value="@ViewBag.MaKhoa" />
+            </div>
+
+            <div class="col-md-2 mb-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary btn-block"><i class="fas fa-search"></i> Tra cứu</button>
+            </div>
+        </form>
+
+        @if (sv != null)
+        {
+            <div class="alert alert-light border mb-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <i class="fas fa-user-graduate text-primary mr-2"></i> <strong>Sinh viên:</strong> @sv.HoTen (@sv.Mssv)
+                    </div>
+                    <div class="col-md-6">
+                        <i class="fas fa-school text-primary mr-2"></i> <strong>Lớp sinh hoạt:</strong> @sv.MaLopNavigation?.TenLop
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="mt-4 font-weight-bold text-success"><i class="fas fa-plus-circle mr-1"></i> DANH SÁCH LỚP HỌC PHẦN ĐANG MỞ</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover text-center align-middle shadow-sm">
+                    <thead class="bg-success text-white">
+                        <tr>
+                            <th>Mã LHP</th>
+                            <th class="text-left">Tên môn học</th>
+                            <th>Số TC</th>
+                            <th>Thời khóa biểu</th>
+                            <th>Sĩ số</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (lopMo.Any())
+                        {
+                            foreach (var item in lopMo)
+                            {
+                                int siSoHienTai = dictSiSo.ContainsKey(item.MaLhp) ? dictSiSo[item.MaLhp] : 0;
+                                int siSoMax = item.SiSoToiDa;
+                                bool isFull = siSoMax > 0 && siSoHienTai >= siSoMax;
+
+                                <tr>
+                                    <td class="font-weight-bold align-middle">@item.MaLhp</td>
+                                    <td class="text-left align-middle">
+                                        <div class="font-weight-bold">@item.MaMonNavigation?.TenMon</div>
+                                        <div class="small text-muted"><i class="fas fa-user-tie"></i> GV: @(item.MaGvNavigation?.HoTen ?? "Chưa xếp")</div>
+                                    </td>
+                                    <td class="align-middle">@item.MaMonNavigation?.SoTinChi</td>
+                                    <td class="align-middle">
+                                        <span class="badge badge-info p-2 mb-1">
+                                            Thứ @item.Thu (Tiết @item.TietBatDau - @(item.TietBatDau + item.SoTiet - 1))
+                                        </span>
+                                        <div class="small text-muted"><i class="fas fa-map-marker-alt"></i> Phòng: @item.PhongHoc</div>
+                                    </td>
+                                    <td class="align-middle">
+                                        <span class="font-weight-bold @(isFull ? "text-danger" : "text-success")">@siSoHienTai / @siSoMax</span><br />
+                                        @if (isFull)
+                                        {
+                                            <span class="badge badge-danger">Đã đầy</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-success">Còn chỗ</span>
+                                        }
+                                    </td>
+                                    <td class="align-middle">
+                                        @if (isFull)
+                                        {
+                                            <button type="button" class="btn btn-secondary btn-sm btn-block" disabled title="Lớp đã hết chỗ">
+                                                <i class="fas fa-ban"></i> Hết chỗ
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <form asp-action="DangKy" method="post" class="m-0">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="mssv" value="@ViewBag.Mssv" />
+                                                <input type="hidden" name="maLhp" value="@item.MaLhp" />
+                                                <input type="hidden" name="maHocKy" value="@ViewBag.MaHocKy" />
+                                                <button type="submit" class="btn btn-success btn-sm btn-block">
+                                                    <i class="fas fa-check"></i> Đăng ký
+                                                </button>
+                                            </form>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="6" class="text-muted py-4 font-italic">Không có lớp học phần nào khả dụng cho học kỳ này.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-5 mb-3 p-3 bg-white rounded shadow-sm border-left border-primary" style="border-width: 4px !important;">
+                <h5 class="text-primary font-weight-bold mb-0"><i class="fas fa-list-check mr-2"></i>KẾT QUẢ ĐĂNG KÝ HỌC PHẦN</h5>
+                
+                @{
+                    int tongTC = daDangKy.Sum(d => d.MaMonNavigation?.SoTinChi ?? 0);
+                    int maxTC = ViewBag.MaxTinChi != null ? (int)ViewBag.MaxTinChi : 25;
+                    string badgeClass = tongTC > (maxTC - 5) ? "badge-warning" : "badge-success";
+                    if (tongTC >= maxTC) badgeClass = "badge-danger";
+                }
+                
+                <div>
+                    <span class="font-weight-bold mr-2 text-dark">Tổng tín chỉ đã chọn:</span>
+                    <span class="badge @badgeClass shadow-sm" style="font-size: 16px; padding: 8px 15px; border-radius: 8px;">@tongTC / @maxTC TC</span>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover text-center align-middle shadow-sm">
+                    <thead class="bg-primary text-white">
+                        <tr>
+                            <th style="width: 25%;">Tên môn học</th>
+                            <th>Lớp hiện tại</th>
+                            <th>Lịch học</th>
+                            <th>Sĩ số lớp</th>
+                            <th>Đổi sang lớp khác</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (daDangKy.Any())
+                        {
+                            foreach (var item in daDangKy)
+                            {
+                                var cacLopKhac = lopMoKhacTatCa
+                                    .Where(p => p.MaMon == item.MaMon && p.MaLhp != item.MaLhp)
+                                    .ToList();
+
+                                bool isTrung = listTrung.Contains(item.MaLhp);
+                                string rowClass = isTrung ? "table-warning" : "";
+
+                                // Tính sĩ số cho Lớp đã đăng ký
+                                int siSoHienTai = dictSiSo.ContainsKey(item.MaLhp) ? dictSiSo[item.MaLhp] : 0;
+                                int siSoMax = item.MaLhpNavigation?.SiSoToiDa ?? 0;
+                                bool isFull = siSoMax > 0 && siSoHienTai >= siSoMax;
+
+                                <tr class="@rowClass">
+                                    <td class="text-left align-middle">
+                                        <span class="font-weight-bold">@item.MaMonNavigation?.TenMon</span>
+                                        @if (isTrung)
+                                        {
+                                            <br /><small class="text-danger font-weight-bold"><i class="fas fa-exclamation-triangle"></i> TRÙNG LỊCH</small>
+                                        }
+                                    </td>
+                                    <td class="align-middle"><span class="text-primary font-weight-bold">@item.MaLhp</span></td>
+                                    <td class="small align-middle">
+                                        @if (item.MaLhpNavigation != null)
+                                        {
+                                            <span>Thứ @item.MaLhpNavigation.Thu (T @item.MaLhpNavigation.TietBatDau-@(item.MaLhpNavigation.TietBatDau + item.MaLhpNavigation.SoTiet - 1))</span>
+                                        }
+                                    </td>
+                                    <td class="align-middle">
+                                        <span class="font-weight-bold">@siSoHienTai / @siSoMax</span><br />
+                                        @if (isFull)
+                                        {
+                                            <span class="badge badge-danger mt-1">Đã đầy</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-success mt-1">Còn chỗ</span>
+                                        }
+                                    </td>
+                                    <td class="align-middle">
+                                        @if (cacLopKhac.Any())
+                                        {
+                                            <form asp-action="DoiLop" method="post" class="d-flex justify-content-center m-0">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="mssv" value="@ViewBag.Mssv" />
+                                                <input type="hidden" name="maMon" value="@item.MaMon" />
+                                                <input type="hidden" name="maHocKy" value="@ViewBag.MaHocKy" />
+                                                
+                                                <select name="maLhpMoi" class="form-control form-control-sm mr-1" style="max-width: 180px;" required>
+                                                    <option value="">-- Chọn lớp khác --</option>
+                                                    @foreach (var l in cacLopKhac)
+                                                    {
+                                                        // 🛑 Khóa các lớp đã đầy trong list Đổi lớp
+                                                        int ssLopKhac = dictSiSo.ContainsKey(l.MaLhp) ? dictSiSo[l.MaLhp] : 0;
+                                                        bool lhpKhacFull = l.SiSoToiDa > 0 && ssLopKhac >= l.SiSoToiDa;
+                                                        string fullText = lhpKhacFull ? " - ĐÃ ĐẦY" : "";
+                                                        
+                                                        <option value="@l.MaLhp" disabled="@(lhpKhacFull ? "disabled" : null)">
+                                                            @l.MaLhp (Thứ @l.Thu) @fullText
+                                                        </option>
+                                                    }
+                                                </select>
+                                                
+                                                <button type="submit" class="btn btn-warning btn-sm shadow-sm" title="Xác nhận đổi lớp">
+                                                    <i class="fas fa-exchange-alt"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small font-italic">Không có lớp khác mở</span>
+                                        }
+                                    </td>
+                                    <td class="align-middle">
+                                        <form asp-action="HuyDangKy" method="post" class="m-0">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="mssv" value="@ViewBag.Mssv" />
+                                            <input type="hidden" name="maLhp" value="@item.MaLhp" />
+                                            <input type="hidden" name="maHocKy" value="@ViewBag.MaHocKy" />
+                                            <button type="submit" class="btn btn-danger btn-sm shadow-sm" onclick="return confirm('Bạn có chắc muốn hủy đăng ký môn học này?');">
+                                                <i class="fas fa-trash-alt"></i> Hủy
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="6" class="text-muted py-4 font-italic">Bạn chưa đăng ký môn học nào trong học kỳ này.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

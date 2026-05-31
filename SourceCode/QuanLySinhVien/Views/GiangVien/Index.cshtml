@@ -1,0 +1,160 @@
+﻿@model IEnumerable<QuanLySinhVien.Models.GiangVien>
+@{
+    ViewData["Title"] = "Danh sách giảng viên";
+}
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-theme/0.1.0-beta.10/select2-bootstrap.min.css" rel="stylesheet" />
+
+<style>
+    /* Chữa bệnh tàng hình cho tiêu đề khi cuộn */
+    .table-head-fixed th {
+        background-color: #343a40 !important; 
+        color: #ffffff !important; 
+        border-bottom: 0 !important;
+        box-shadow: inset 0 -1px 0 #dee2e6;
+        z-index: 10;
+    }
+</style>
+
+<div class="card">
+    <div class="card-header">
+        <form method="get" action="/GiangVien/Index">
+            <div class="row align-items-center">
+                
+                <div class="col-md-4 mb-2">
+                    <input type="text" name="tuKhoa" value="@ViewBag.TuKhoa" class="form-control" placeholder="Tìm tên/Mã GV...">
+                </div>
+
+                <div class="col-md-4 mb-2">
+                    <select name="maKhoa" id="filterKhoa" class="form-control select2" style="width: 100%;">
+                        <option value="">-- Tất cả khoa --</option>
+                        @if (ViewBag.DanhSachKhoa != null)
+                        {
+                            foreach (var khoa in ViewBag.DanhSachKhoa)
+                            {
+                                <option value="@khoa.MaKhoa" selected="@(ViewBag.MaKhoa == khoa.MaKhoa ? "selected" : null)">@khoa.TenKhoa</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-4 mb-2 d-flex">
+                    <button type="submit" class="btn btn-primary flex-fill mr-1" title="Lọc">
+                        <i class="fas fa-filter"></i> Lọc
+                    </button>
+                    <a href="/GiangVien/Index" class="btn btn-default flex-fill text-center" title="Xóa lọc">
+                        <i class="fas fa-sync"></i> Xoá lọc
+                    </a>
+                </div>
+            </div>
+
+            <div class="row mt-1">
+                <div class="col-md-12 text-left">
+                    @if (User.IsInRole("Admin") || User.IsInRole("CanBo"))
+                    {
+                        <a href="/GiangVien/Create" class="btn btn-success">
+                            <i class="fas fa-plus mr-1"></i> Thêm giảng viên
+                        </a>
+                    }
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="card-body p-0 table-responsive" style="max-height: 550px; overflow-y: auto;">
+        <table class="table table-bordered table-striped table-hover text-nowrap table-head-fixed mb-0">
+            <thead class="thead-dark">
+                <tr>
+                    <th style="width:110px">Mã GV</th>
+                    <th>Họ và tên</th>
+                    <th>Khoa</th>
+                    <th style="width:150px">Học vị</th>
+                    <th>Email</th>
+                    <th style="width:150px" class="text-center">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-5">
+                            <i class="fas fa-search fa-3x mb-3 d-block text-secondary"></i>
+                            <h5 class="mb-1">Chưa có dữ liệu giảng viên.</h5>
+                            <p class="mb-0">Vui lòng sử dụng bộ lọc bên trên để tìm kiếm (Ví dụ: Chọn Khoa hoặc Gõ Tên).</p>
+                        </td>
+                    </tr>
+                }
+                @foreach (var gv in Model)
+                {
+                    <tr>
+                        <td><code>@gv.MaGv</code></td>
+                        <td class="font-weight-bold">@gv.HoTen</td>
+                        <td>@gv.MaKhoaNavigation?.TenKhoa</td>
+                        <td>
+                            <span class="badge badge-info">@gv.HocVi</span>
+                        </td>
+                        <td>@gv.Email</td>
+                        <td class="text-center">
+                            <a href="/GiangVien/Detail/@gv.MaGv" class="btn btn-info btn-sm" title="Xem">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            @if (User.IsInRole("Admin") || User.IsInRole("CanBo"))
+                            {
+                                <a href="/GiangVien/Edit/@gv.MaGv" class="btn btn-warning btn-sm" title="Sửa">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <form method="post" action="/GiangVien/Delete/@gv.MaGv" style="display:inline-block" onsubmit="return confirm('Xoá giảng viên @gv.HoTen?')">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-danger btn-sm" title="Xoá">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                }
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card-footer clearfix">
+        <div class="float-left pt-1">
+            <small class="text-muted">Tổng: <strong>@ViewBag.TongSo</strong> giảng viên</small>
+        </div>
+        @if (ViewBag.TongTrang > 1)
+        {
+            <ul class="pagination pagination-sm float-right mb-0">
+                <li class="page-item @(ViewBag.Trang <= 1 ? "disabled" : "")">
+                    <a class="page-link" href="/GiangVien/Index?trang=@(ViewBag.Trang - 1)&tuKhoa=@ViewBag.TuKhoa&maKhoa=@ViewBag.MaKhoa">«</a>
+                </li>
+                @for (int i = 1; i <= ViewBag.TongTrang; i++)
+                {
+                    <li class="page-item @(i == ViewBag.Trang ? "active" : "")">
+                        <a class="page-link" href="/GiangVien/Index?trang=@i&tuKhoa=@ViewBag.TuKhoa&maKhoa=@ViewBag.MaKhoa">@i</a>
+                    </li>
+                }
+                <li class="page-item @(ViewBag.Trang >= ViewBag.TongTrang ? "disabled" : "")">
+                    <a class="page-link" href="/GiangVien/Index?trang=@(ViewBag.Trang + 1)&tuKhoa=@ViewBag.TuKhoa&maKhoa=@ViewBag.MaKhoa">»</a>
+                </li>
+            </ul>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    
+    <script>
+        $(document).ready(function () {
+            // KÍCH HOẠT TÍNH NĂNG GÕ ĐỂ TÌM KIẾM (SELECT2) VÀO DROPDOWN KHOA
+            $('.select2').select2({
+                theme: "bootstrap",
+                width: '100%'
+            });
+        });
+    </script>
+}

@@ -1,0 +1,141 @@
+﻿@model QuanLySinhVien.Models.SinhVien
+@{
+    ViewData["Title"] = "Thông tin cá nhân";
+}
+
+<style>
+    /* Custom lại màu xanh y chang bản mẫu */
+    .bg-soft-blue {
+        background-color: #6f86d6;
+        color: #ffffff;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 1.1rem;
+    }
+    
+    .info-table th {
+        width: 35%;
+        font-weight: normal;
+        color: #555;
+        vertical-align: middle;
+        padding-left: 20px !important;
+    }
+    
+    .info-table td {
+        font-weight: 500;
+        color: #333;
+        vertical-align: middle;
+    }
+    
+    .profile-card {
+        border-radius: 2px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+        margin-bottom: 20px;
+        border: none;
+    }
+    
+        .profile-card .card-header {
+            border-radius: 2px 2px 0 0;
+            border-bottom: none;
+            padding: 12px 20px;
+        }
+    
+    /* Chỉnh sửa Breadcrumb cho giống mẫu */
+    .custom-breadcrumb {
+        background-color: #f8f9fa;
+        padding: 10px 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+        font-weight: 500;
+    }
+
+        .custom-breadcrumb a {
+            color: #333;
+            text-decoration: none;
+        }
+</style>
+
+<div class="custom-breadcrumb mt-3">
+    <i class="fas fa-home text-secondary mr-1"></i> <a href="/">Trang cá nhân</a>
+    <span class="mx-2 text-muted">/</span>
+    <i class="fas fa-user-circle text-secondary mr-1"></i> Thông tin cá nhân
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        
+        <div class="card profile-card text-center py-5">
+            <div class="card-body">
+                <div class="mb-3">
+                    <i class="fas fa-user-circle text-secondary" style="font-size: 90px; color: #ccc !important;"></i>
+                </div>
+                <h5 class="font-weight-bold mb-0 text-dark">@Model.HoTen</h5>
+            </div>
+        </div>
+
+        <div class="card profile-card">
+            <div class="card-header bg-soft-blue">
+                THÔNG TIN CHUNG
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-bordered mb-0 info-table">
+                    <tbody>
+                        <tr><th>Mã sinh viên</th><td>@Model.Mssv</td></tr>
+                        <tr><th>Họ tên</th><td>@Model.HoTen</td></tr>
+                        <tr><th>Ngày sinh</th><td>@(Model.NgaySinh.ToString("dd/MM/yyyy"))</td></tr>
+                        <tr><th>Nơi sinh</th><td class="text-muted">Chưa cập nhật</td></tr>
+                        <tr><th>Giới tính</th><td>@Model.GioiTinh</td></tr>
+                        <tr><th>CMND/CCCD</th><td class="text-muted">Chưa cập nhật</td></tr>
+                        <tr><th>Lớp sinh viên</th><td>@Model.MaLopNavigation?.TenLop</td></tr>
+                        <tr><th>Dân tộc</th><td class="text-muted">Chưa cập nhật</td></tr>
+                        <tr><th>Tôn giáo</th><td class="text-muted">Chưa cập nhật</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer text-center py-3 bg-white">
+                <a href="/SinhVien/CapNhatThongTin" class="btn btn-primary font-weight-bold shadow-sm" style="background-color: #6f86d6; border: none; padding: 8px 25px; transition: 0.3s;">
+                    <i class="fas fa-pencil-alt mr-1"></i> Cập nhật thông tin cá nhân
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        
+        <div class="card profile-card">
+            <div class="card-header bg-soft-blue">
+                THÔNG TIN LIÊN LẠC
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-bordered mb-0 info-table">
+                    <tbody>
+                        <tr><th>Quốc gia</th><td>Việt Nam</td></tr>
+                        <tr><th>Tỉnh thành</th><td>@(string.IsNullOrEmpty(Model.DiaChi) ? "Chưa cập nhật" : Model.DiaChi)</td></tr>
+                        <tr><th>Phường xã</th><td class="text-muted">Chưa cập nhật</td></tr>
+                        <tr><th>Di động</th><td>@(string.IsNullOrEmpty(Model.SoDienThoai) ? "Chưa cập nhật" : Model.SoDienThoai)</td></tr>
+                        <tr><th>Điện thoại</th><td class="text-muted">Chưa cập nhật</td></tr>
+                        <tr><th>Email cá nhân</th><td class="text-muted">Chưa cập nhật</td></tr>
+                        <tr><th>Email trường</th><td><a href="mailto:@($"{Model.Mssv}@st.qnu.edu.vn")" class="text-primary">@($"{Model.Mssv}@st.qnu.edu.vn")</a></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card profile-card">
+            <div class="card-header bg-soft-blue">
+                THÔNG TIN KHÓA HỌC
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-bordered mb-0 info-table">
+                    <tbody>
+                        <tr><th>Khoa</th><td>@Model.MaLopNavigation?.MaKhoaNavigation?.TenKhoa</td></tr>
+                        <tr><th>Khóa học</th><td>Đại học chính quy</td></tr>
+                        <tr><th>Hình thức đào tạo</th><td class="text-muted">Chính quy</td></tr>
+                        <tr><th>Cố vấn học tập</th><td class="text-muted">Chưa cập nhật</td></tr>
+                        <tr><th>Liên hệ cố vấn học tập</th><td class="text-muted">Chưa cập nhật</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

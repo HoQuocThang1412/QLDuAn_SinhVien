@@ -1,0 +1,139 @@
+﻿@model QuanLySinhVien.Models.MonHoc
+@{
+    ViewData["Title"] = "Chi tiết môn học";
+    string monTienQuyet = ViewBag.MonTienQuyet ?? "";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-book mr-2"></i> Chi tiết môn học
+                </h3>
+            </div>
+
+            <div class="card-body p-0">
+                <table class="table table-bordered mb-0">
+                    <tbody>
+                        <tr>
+                            <th style="width:180px" class="bg-light">Mã môn</th>
+                            <td><code>@Model.MaMon</code></td>
+                        </tr>
+
+                        <tr>
+                            <th class="bg-light">Tên môn học</th>
+                            <td>
+                                <strong>@Model.TenMon</strong>
+                                @if (Model.IsDieuKien)
+                                {
+                                    <span class="text-danger font-weight-bold ml-1" title="Môn điều kiện — không tính GPA">*</span>
+                                }
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <th class="bg-light">Khoa</th>
+                            <td>@(Model.MaKhoaNavigation?.TenKhoa ?? "Chưa cập nhật")</td>
+                        </tr>
+
+                        <tr>
+                            <th class="bg-light">Số tín chỉ</th>
+                            <td>
+                                <span class="badge badge-primary">@Model.SoTinChi tín chỉ</span>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <th class="bg-light">Môn điều kiện</th>
+                            <td>
+                                @if (Model.IsDieuKien)
+                                {
+                                    <span class="badge badge-danger">Có — Không tính GPA</span>
+                                    <small class="text-muted ml-2">Môn này sẽ có dấu (*) trong bảng điểm.</small>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-success">Không — Có tính GPA</span>
+                                }
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <th class="bg-light">Môn tiên quyết</th>
+                            <td>
+                                @if (!string.IsNullOrEmpty(Model.MaMonTienQuyet))
+                                {
+                                    <code>@Model.MaMonTienQuyet</code>
+                                    @if (!string.IsNullOrEmpty(monTienQuyet))
+                                    {
+                                        <span class="ml-2">@monTienQuyet</span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Không có</span>
+                                }
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <th class="bg-light">Hệ số QT</th>
+                            <td>@Model.HeSoQt.ToString("0.00") — (@((Model.HeSoQt * 100).ToString("0"))%)</td>
+                        </tr>
+
+                        <tr>
+                            <th class="bg-light">Hệ số CK</th>
+                            <td>@Model.HeSoCk.ToString("0.00") — (@((Model.HeSoCk * 100).ToString("0"))%)</td>
+                        </tr>
+
+                        <tr>
+                            <th class="bg-light">Công thức tính điểm</th>
+                            <td>
+                                <code>
+                                    DiemTongKet = ROUND((DiemQT × @Model.HeSoQt.ToString("0.00")) + (DiemThi × @Model.HeSoCk.ToString("0.00")), 1)
+                                </code>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <th class="bg-light">Điều kiện qua môn</th>
+                            <td>TK ≥ 4.0 <strong>VÀ</strong> DiemThi ≥ 1.0</td>
+                        </tr>
+
+                        <tr>
+                            <th class="bg-light">Ghi chú GPA</th>
+                            <td>
+                                @if (Model.IsDieuKien)
+                                {
+                                    <span class="text-danger font-weight-bold">
+                                        (*) Môn này là môn điều kiện, không tính vào GPA hệ 4 và điểm trung bình tích lũy.
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-success">
+                                        Môn này được tính vào GPA hệ 4 và điểm trung bình tích lũy.
+                                    </span>
+                                }
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card-footer">
+                @if (User.IsInRole("Admin") || User.IsInRole("CanBo"))
+                {
+                    <a href="/MonHoc/Edit/@Model.MaMon" class="btn btn-warning">
+                        <i class="fas fa-edit mr-1"></i> Sửa
+                    </a>
+                }
+
+                <a href="/MonHoc/Index" class="btn btn-default ml-2">
+                    <i class="fas fa-arrow-left mr-1"></i> Quay lại
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

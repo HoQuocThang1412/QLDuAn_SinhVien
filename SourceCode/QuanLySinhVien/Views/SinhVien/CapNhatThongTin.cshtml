@@ -1,0 +1,62 @@
+﻿@model QuanLySinhVien.Models.SinhVien
+@{
+    ViewData["Title"] = "Cập nhật thông tin";
+}
+
+<div class="custom-breadcrumb mt-3 mb-4 p-3 bg-light rounded shadow-sm">
+    <i class="fas fa-home text-secondary mr-1"></i> <a href="/" class="text-dark">Trang cá nhân</a>
+    <span class="mx-2 text-muted">/</span>
+    <a href="/SinhVien/ThongTin" class="text-dark">Thông tin cá nhân</a>
+    <span class="mx-2 text-muted">/</span>
+    <strong class="text-primary">Cập nhật liên lạc</strong>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header text-white" style="background-color: #0b3d91;">
+                <h4 class="card-title mb-0 font-weight-bold"><i class="fas fa-user-edit mr-2"></i>CẬP NHẬT THÔNG TIN LIÊN LẠC</h4>
+            </div>
+            
+            <form method="post" action="/SinhVien/CapNhatThongTin">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="Mssv" value="@Model.Mssv" />
+
+                <div class="card-body">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">
+                            @Html.ValidationSummary(false, "", new { @class = "mb-0" })
+                        </div>
+                    }
+
+                    <div class="alert alert-info py-2">
+                        <i class="fas fa-info-circle mr-1"></i> Sinh viên chỉ được phép cập nhật Số điện thoại và Tỉnh/Thành phố. Các thông tin khác vui lòng liên hệ Giáo vụ khoa.
+                    </div>
+
+                    <div class="form-group">
+                        <label>Họ và tên</label>
+                        <input type="text" class="form-control font-weight-bold text-primary" value="@Model.HoTen" readonly style="background-color: #e9ecef;" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Số điện thoại di động <span class="text-danger">*</span></label>
+                        <input type="text" name="SoDienThoai" value="@Model.SoDienThoai" class="form-control border-primary" placeholder="Ví dụ: 0987654321" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tỉnh/Thành phố hiện tại <span class="text-danger">*</span></label>
+                        <input type="text" name="DiaChi" value="@Model.DiaChi" class="form-control border-primary" placeholder="Ví dụ: Bình Định" required />
+                    </div>
+                </div>
+
+                <div class="card-footer text-right bg-white">
+                    <a href="/SinhVien/ThongTin" class="btn btn-default mr-2"><i class="fas fa-times mr-1"></i> Hủy bỏ</a>
+                    <button type="submit" class="btn btn-success font-weight-bold px-4">
+                        <i class="fas fa-save mr-1"></i> Lưu thay đổi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

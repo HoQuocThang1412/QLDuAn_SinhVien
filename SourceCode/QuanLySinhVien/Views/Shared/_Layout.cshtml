@@ -1,0 +1,368 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@ViewData["Title"] - Quản lý Sinh viên QNU</title>
+    <link rel="stylesheet" href="~/adminlte/plugins/fontawesome-free/css/all.min.css">
+    <link rel="stylesheet" href="~/adminlte/dist/css/adminlte.min.css">
+</head>
+
+<body class="hold-transition sidebar-mini layout-fixed">
+    <div class="wrapper">
+
+        <nav class="main-header navbar navbar-expand navbar-white navbar-light border-bottom">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="pushmenu" href="#" role="button">
+                        <i class="fas fa-bars"></i>
+                    </a>
+                </li>
+            </ul>
+
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item d-flex align-items-center mr-3">
+                    <span class="text-dark">
+                        <i class="fas fa-user-circle mr-1 text-primary"></i>
+                        Xin chào, <strong class="text-primary">@User.Identity?.Name</strong>
+                    </span>
+                </li>
+
+                <li class="nav-item">
+                    <a href="/TaiKhoan/DoiMatKhau" class="nav-link text-info font-weight-bold" title="Đổi mật khẩu">
+                        <i class="fas fa-key"></i> Đổi mật khẩu
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="/TaiKhoan/DangXuat" class="nav-link text-danger font-weight-bold" title="Đăng xuất">
+                        <i class="fas fa-sign-out-alt mr-1"></i> Đăng xuất
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <aside class="main-sidebar sidebar-dark-primary elevation-4">
+            <a href="/" class="brand-link">
+                <i class="fas fa-graduation-cap brand-image ml-3"></i>
+                <span class="brand-text font-weight-bold">QL Sinh Viên QNU</span>
+            </a>
+
+            <div class="sidebar">
+                <nav class="mt-2">
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+
+                        <li class="nav-item">
+                            <a href="/Home/Index" class="nav-link">
+                                <i class="nav-icon fas fa-home"></i>
+                                <p>Trang chủ</p>
+                            </a>
+                        </li>
+
+                        @if (User.IsInRole("Admin") || User.IsInRole("CanBo"))
+                        {
+                            <li class="nav-header">QUẢN LÝ</li>
+
+                            <li class="nav-item">
+                                <a href="/SinhVien/Index" class="nav-link">
+                                    <i class="nav-icon fas fa-user-graduate"></i>
+                                    <p>Sinh viên</p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="/GiangVien/Index" class="nav-link">
+                                    <i class="nav-icon fas fa-chalkboard-teacher"></i>
+                                    <p>Giảng viên</p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="/LopHoc/Index" class="nav-link">
+                                    <i class="nav-icon fas fa-chalkboard"></i>
+                                    <p>Lớp học</p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="/MonHoc/Index" class="nav-link">
+                                    <i class="nav-icon fas fa-book"></i>
+                                    <p>Môn học</p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="/Khoa/Index" class="nav-link">
+                                    <i class="nav-icon fas fa-building"></i>
+                                    <p>Quản lý Khoa</p>
+                                </a>
+                            </li>
+
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <li class="nav-item">
+                                    <a href="/KhoaHoc/Index" class="nav-link">
+                                        <i class="nav-icon fas fa-layer-group"></i>
+                                        <p>Quản lý Khóa học</p>
+                                    </a>
+                                </li>
+                            }
+
+                            <li class="nav-item">
+                                <a href="/HocKy/Index" class="nav-link">
+                                    <i class="nav-icon fas fa-calendar-alt"></i>
+                                    <p>Học kỳ</p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a asp-controller="LopHocPhan" asp-action="Index" class="nav-link">
+                                    <i class="nav-icon fas fa-layer-group"></i>
+                                    <p>Lớp học phần</p>
+                                </a>
+                            </li>
+
+                            @if (User.IsInRole("Admin") || User.IsInRole("CanBo"))
+                            {
+                                <li class="nav-item">
+                                    <a href="/HocPhi/QuanLyDonGia" class="nav-link">
+                                        <i class="nav-icon fas fa-money-check-alt"></i>
+                                        <p>Cài đặt Đơn giá HP</p>
+                                    </a>
+                                </li>
+                            }
+
+                            <li class="nav-header">BÁO CÁO</li>
+
+                            <li class="nav-item">
+                                <a href="/ThongKe/Index" class="nav-link">
+                                    <i class="nav-icon fas fa-chart-bar"></i>
+                                    <p>Thống kê</p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="/HocVu/Index" class="nav-link">
+                                    <i class="nav-icon fas fa-user-shield text-warning"></i>
+                                    <p>Cảnh báo học vụ</p>
+                                </a>
+                            </li>
+                        }
+
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <li class="nav-header">HỆ THỐNG</li>
+
+                            <li class="nav-item">
+                                <a href="/TaiKhoan/DanhSach" class="nav-link">
+                                    <i class="nav-icon fas fa-users-cog"></i>
+                                    <p>Tài khoản</p>
+                                </a>
+                            </li>
+                        }
+
+                        @if (User.IsInRole("GiangVien"))
+                        {
+                            <li class="nav-header">GIẢNG DẠY</li>
+
+                            <li class="nav-item">
+                                <a href="/LopHocPhan/LichDay" class="nav-link">
+                                    <i class="nav-icon fas fa-calendar-check"></i>
+                                    <p>Lịch dạy của tôi</p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="/Diem/Index" class="nav-link">
+                                    <i class="nav-icon fas fa-edit"></i>
+                                    <p>Nhập điểm</p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="/Diem/DanhSach" class="nav-link">
+                                    <i class="nav-icon fas fa-list-alt"></i>
+                                    <p>Xem bảng điểm</p>
+                                </a>
+                            </li>
+                        }
+
+                        @if (User.IsInRole("SinhVien"))
+                        {
+                            <li class="nav-header">CÁ NHÂN</li>
+
+                            <li class="nav-item">
+                                <a href="/DangKyHoc/Index" class="nav-link">
+                                    <i class="nav-icon fas fa-clipboard-list"></i>
+                                    <p>Đăng ký học phần</p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="/Diem/TraCuu" class="nav-link">
+                                    <i class="nav-icon fas fa-search"></i>
+                                    <p>Bảng điểm của tôi</p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="/HocVu/Hoclai" class="nav-link">
+                                    <i class="nav-icon fas fa-redo-alt text-warning"></i>
+                                    <p>Môn cần học lại</p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="/SinhVien/ThongTin" class="nav-link">
+                                    <i class="nav-icon fas fa-id-card"></i>
+                                    <p>Thông tin cá nhân</p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="/SinhVien/ThoiKhoaBieu" class="nav-link">
+                                    <i class="nav-icon fas fa-clock"></i>
+                                    <p>Lịch học</p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="/HocPhi/ThongTinHocPhi" class="nav-link">
+                                    <i class="nav-icon fas fa-wallet text-warning"></i>
+                                    <p>Thông tin học phí</p>
+                                </a>
+                            </li>
+                        }
+
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+
+        <div class="content-wrapper">
+            <div class="content-header">
+                <div class="container-fluid">
+                    <div class="row mb-2">
+                        <div class="col-sm-6">
+                            <h1 class="m-0 font-weight-bold text-dark">@ViewData["Title"]</h1>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <ol class="breadcrumb float-sm-right">
+                                <li class="breadcrumb-item">
+                                    <a href="/Home/Index">Trang chủ</a>
+                                </li>
+                                <li class="breadcrumb-item active">@ViewData["Title"]</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <section class="content">
+                <div class="container-fluid">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show shadow-sm">
+                            <i class="fas fa-check-circle mr-2"></i> @TempData["Success"]
+                            <button type="button" class="close" data-dismiss="alert">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                    }
+
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show shadow-sm">
+                            <i class="fas fa-exclamation-circle mr-2"></i> @TempData["Error"]
+                            <button type="button" class="close" data-dismiss="alert">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                    }
+
+                    @RenderBody()
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script src="~/adminlte/plugins/jquery/jquery.min.js"></script>
+    <script src="~/adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="~/adminlte/dist/js/adminlte.min.js"></script>
+
+    @* Gemini chatbot widget - chỉ hiện khi đã đăng nhập *@
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        @await Html.PartialAsync("_ChatBotWidget")
+    }
+
+    @RenderSection("Scripts", required: false)
+
+    <script>
+            // ── Danh sách chuyên ngành Sư phạm ──
+            var chuyenNganhSP = [
+                { ma: 'SP-TOAN', ten: 'Sư phạm Toán' },
+                { ma: 'SP-VAN',  ten: 'Sư phạm Ngữ Văn' },
+                { ma: 'SP-ANH',  ten: 'Sư phạm Tiếng Anh' },
+                { ma: 'SP-LY',   ten: 'Sư phạm Vật Lý' },
+                { ma: 'SP-HOA',  ten: 'Sư phạm Hóa Học' },
+                { ma: 'SP-SINH', ten: 'Sư phạm Sinh Học' },
+                { ma: 'SP-DIA',  ten: 'Sư phạm Địa Lý' },
+                { ma: 'SP-SU',   ten: 'Sư phạm Lịch Sử' },
+                { ma: 'SP-TIN',  ten: 'Sư phạm Tin Học' },
+                { ma: 'SP-GDCD', ten: 'Sư phạm GDCD' },
+            ];
+
+            // Gọi khi chọn khoa — hiện/ẩn dropdown chuyên ngành
+            function khoaChanged(selectEl) {
+                var maKhoa = selectEl.value;
+                var divCN  = document.getElementById('divChuyenNganh');
+                var selCN  = document.getElementById('selChuyenNganh');
+                var selKhoa = document.getElementById('selKhoa') || selectEl;
+
+                if (!divCN || !selCN) return;
+
+                if (maKhoa === 'SP') {
+                    divCN.style.display = 'block';
+                    selCN.innerHTML = '<option value="">-- Chọn chuyên ngành --</option>';
+
+                    chuyenNganhSP.forEach(function(cn) {
+                        selCN.innerHTML += '<option value="' + cn.ma + '">' + cn.ten + '</option>';
+                    });
+
+                    selCN.setAttribute('required', 'required');
+                } else {
+                    divCN.style.display = 'none';
+                    selCN.removeAttribute('required');
+                    selCN.value = '';
+                }
+            }
+
+            // Khi chọn chuyên ngành SP → cập nhật giá trị select Khoa thành chuyên ngành đó
+            function chuyenNganhChanged(selectEl) {
+                var maChuyenNganh = selectEl.value;
+                var selKhoa = document.getElementById('selKhoa');
+
+                if (!selKhoa || !maChuyenNganh) return;
+
+                var existing = selKhoa.querySelector('option[value="' + maChuyenNganh + '"]');
+
+                if (!existing) {
+                    var cn = chuyenNganhSP.find(function(c) {
+                        return c.ma === maChuyenNganh;
+                    });
+
+                    if (cn) {
+                        var opt = document.createElement('option');
+                        opt.value = cn.ma;
+                        opt.text = cn.ten;
+                        selKhoa.appendChild(opt);
+                    }
+                }
+
+                selKhoa.value = maChuyenNganh;
+            }
+    </script>
+</body>
+</html>

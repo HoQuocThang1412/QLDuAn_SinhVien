@@ -1,0 +1,196 @@
+﻿@model List<QuanLySinhVien.Models.DangKyHoc>
+@{
+    ViewData["Title"] = "Thông tin học phí cá nhân";
+
+    decimal giaMotTinChi = ViewBag.GiaMotTinChi ?? 0m;
+    decimal tongPhaiDong = ViewBag.TongPhaiDong ?? 0m;
+    decimal tongDaDong = ViewBag.TongDaDong ?? 0m;
+    decimal conNo = ViewBag.ConNo ?? 0m;
+    string maHocKy = ViewBag.MaHocKy ?? "";
+}
+
+<div class="card card-outline card-warning shadow-sm">
+    <div class="card-header bg-navy">
+        <h3 class="card-title font-weight-bold">
+            <i class="fas fa-wallet mr-2"></i> CHI TIẾT HỌC PHÍ HỌC KỲ
+        </h3>
+    </div>
+
+    <div class="card-body">
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-circle mr-1"></i> @TempData["Error"]
+            </div>
+        }
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle mr-1"></i> @TempData["Success"]
+            </div>
+        }
+
+        <form method="get" action="/HocPhi/ThongTinHocPhi" class="mb-3">
+            <div class="form-row align-items-end">
+                <div class="col-md-4">
+                    <label class="font-weight-bold">Chọn học kỳ</label>
+                    <select name="maHocKy" class="form-control" onchange="this.form.submit()">
+                        @if (ViewBag.DanhSachHK != null)
+                        {
+                            foreach (var hk in ViewBag.DanhSachHK)
+                            {
+                                <option value="@hk.MaHocKy" selected="@(maHocKy == hk.MaHocKy ? "selected" : null)">
+                                    @hk.TenHocKy
+                                </option>
+                            }
+                        }
+                    </select>
+                </div>
+            </div>
+        </form>
+
+        <div class="row mb-3 p-3 bg-light border rounded mx-0">
+            <div class="col-md-8">
+                <h5 class="mb-1">
+                    Sinh viên:
+                    <strong>@ViewBag.SinhVien?.HoTen</strong>
+                    -
+                    MSSV:
+                    <strong>@ViewBag.SinhVien?.Mssv</strong>
+                </h5>
+
+                <p class="text-muted mb-0">
+                    Học kỳ:
+                    <strong>@(ViewBag.TenHocKy ?? maHocKy)</strong>
+                    |
+                    Hệ đào tạo: Chính quy
+                    |
+                    Đơn giá áp dụng:
+                    <span class="text-danger font-weight-bold">@giaMotTinChi.ToString("N0") đ/TC</span>
+                </p>
+            </div>
+
+            <div class="col-md-4 text-right">
+                <h3 class="text-danger font-weight-bold mb-0">
+                    Nợ: @conNo.ToString("N0") đ
+                </h3>
+            </div>
+        </div>
+
+        @if (giaMotTinChi <= 0)
+        {
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle mr-1"></i>
+                Chưa cấu hình đơn giá học phí cho khoa/khóa của bạn. Vui lòng liên hệ giáo vụ.
+            </div>
+            <div class="alert alert-info">
+                <div><strong>Debug MaKhoa SV:</strong> @ViewBag.DebugMaKhoaSinhVien</div>
+                <div><strong>Debug KhoaHoc SV:</strong> @ViewBag.DebugKhoaHocSinhVien</div>
+                <div><strong>Debug Đơn giá tìm được:</strong> @ViewBag.DebugDonGiaTimDuoc</div>
+            </div>
+        }
+
+        @if (Model == null || !Model.Any())
+        {
+            <div class="text-center py-5 bg-light rounded border">
+                <i class="fas fa-info-circle fa-2x text-muted mb-2"></i>
+                <h5 class="text-muted mb-0">Bạn chưa đăng ký môn học nào trong học kỳ này.</h5>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover text-center">
+                    <thead class="bg-warning">
+                        <tr>
+                            <th class="text-left">Mã LHP</th>
+                            <th class="text-left">Môn học</th>
+                            <th style="width: 100px">Số TC</th>
+                            <th>Đơn giá</th>
+                            <th>Thành tiền</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            var tenMon = item.MaMonNavigation?.TenMon
+                                ?? item.MaLhpNavigation?.MaMonNavigation?.TenMon
+                                ?? "Không xác định";
+
+                            var tc = item.MaMonNavigation?.SoTinChi
+                                ?? item.MaLhpNavigation?.MaMonNavigation?.SoTinChi
+                                ?? 0;
+
+                            var thanhTien = tc * giaMotTinChi;
+
+                            <tr>
+                                <td class="text-left font-weight-bold">@item.MaLhp</td>
+                                <td class="text-left">@tenMon</td>
+                                <td>@tc</td>
+                                <td>@giaMotTinChi.ToString("N0")</td>
+                                <td class="font-weight-bold">@thanhTien.ToString("N0")</td>
+                            </tr>
+                        }
+                    </tbody>
+
+                    <tfoot class="bg-light font-weight-bold">
+                        <tr>
+                            <td colspan="2" class="text-right">TỔNG CỘNG:</td>
+                            <td>@ViewBag.TongTinChi</td>
+                            <td>-</td>
+                            <td>@tongPhaiDong.ToString("N0")</td>
+                        </tr>
+
+                        <tr>
+                            <td colspan="4" class="text-right text-success">ĐÃ ĐÓNG:</td>
+                            <td class="text-success">@tongDaDong.ToString("N0")</td>
+                        </tr>
+
+                        <tr>
+                            <td colspan="4" class="text-right text-danger">CÒN NỢ:</td>
+                            <td class="text-danger text-lg">@conNo.ToString("N0")</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        }
+
+        @if (conNo > 0)
+        {
+            var conNoInput = conNo.ToString("0", System.Globalization.CultureInfo.InvariantCulture);
+
+            <div class="callout callout-info mt-4 shadow-sm">
+                <h5>
+                    <i class="fas fa-info-circle text-info mr-2"></i> Thanh toán trực tuyến
+                </h5>
+
+                <p>Vui lòng xác nhận số tiền cần thanh toán cho học kỳ đang chọn.</p>
+
+                <form asp-action="XacNhanThanhToan" method="get" class="form-inline mt-3">
+                    <input type="hidden" name="maHocKy" value="@maHocKy" />
+
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text font-weight-bold">VNĐ</span>
+                        </div>
+
+                        <input type="number"
+                               name="soTien"
+                               class="form-control"
+                               value="@conNoInput"
+                               min="1"
+                               max="@conNoInput"
+                               step="1"
+                               required />
+                    </div>
+
+                    <button type="submit" class="btn btn-success ml-3 font-weight-bold shadow-sm">
+                        <i class="fas fa-qrcode mr-1"></i> HIỆN MÃ QR
+                    </button>
+                </form>
+            </div>
+        }
+    </div>
+</div>

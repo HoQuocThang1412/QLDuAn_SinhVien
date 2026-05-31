@@ -1,0 +1,454 @@
+﻿@model List<QuanLySinhVien.Models.ChiTietLichHoc>
+@using QuanLySinhVien.Models
+
+@{
+    ViewData["Title"] = "Lịch dạy của tôi";
+
+    var danhSachHocKy = ViewBag.DanhSachHocKy as List<HocKy> ?? new List<HocKy>();
+
+    string? maHocKy = ViewBag.MaHocKy as string;
+
+    string TenThu(int thu)
+    {
+        return thu == 8 ? "CN" : "Thứ " + thu;
+    }
+
+    bool LichCoTiet(ChiTietLichHoc lich, int tiet)
+    {
+        return tiet >= lich.TietBatDau && tiet <= lich.TietBatDau + lich.SoTiet - 1;
+    }
+
+    int tongLopHocPhan = Model
+        .Where(x => x.MaLhpNavigation != null)
+        .Select(x => x.MaLhp)
+        .Distinct()
+        .Count();
+
+    int tongBuoiDay = Model.Count;
+    int tongSoTiet = Model.Sum(x => x.SoTiet);
+}
+
+<style>
+    .lichday-page .card-custom {
+        border: 0;
+        border-radius: 16px;
+        box-shadow: 0 6px 18px rgba(15, 23, 42, .08);
+        overflow: hidden;
+    }
+
+    .lichday-page .page-title {
+        font-size: 1.45rem;
+        font-weight: 800;
+        color: #1f2937;
+    }
+
+    .lichday-page .page-subtitle {
+        color: #6b7280;
+        font-size: .95rem;
+    }
+
+    .lichday-page .stat-card {
+        border: 0;
+        border-radius: 16px;
+        padding: 18px;
+        color: #fff;
+        min-height: 115px;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, .10);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .lichday-page .stat-number {
+        font-size: 1.85rem;
+        font-weight: 800;
+    }
+
+    .lichday-page .stat-label {
+        font-size: .88rem;
+        opacity: .95;
+    }
+
+    .lichday-page .stat-icon {
+        position: absolute;
+        right: 16px;
+        bottom: 10px;
+        font-size: 42px;
+        opacity: .25;
+    }
+
+    .bg-blue {
+        background: linear-gradient(135deg, #2563eb, #38bdf8);
+    }
+
+    .bg-green {
+        background: linear-gradient(135deg, #059669, #34d399);
+    }
+
+    .bg-orange {
+        background: linear-gradient(135deg, #f59e0b, #fb923c);
+    }
+
+    .lichday-page .form-control {
+        border-radius: 10px;
+        min-height: 40px;
+    }
+
+    .lichday-page label {
+        font-size: .82rem;
+        font-weight: 700;
+        color: #4b5563;
+    }
+
+    .lichday-page .tkb-table th {
+        background: #f8fafc;
+        color: #475569;
+        font-size: .78rem;
+        text-transform: uppercase;
+        white-space: nowrap;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .lichday-page .tkb-table td {
+        min-width: 170px;
+        height: 88px;
+        vertical-align: top;
+        background: #ffffff;
+    }
+
+    .lichday-page .tiet-label {
+        width: 80px;
+        text-align: center;
+        font-weight: 800;
+        color: #334155;
+        background: #f8fafc !important;
+        vertical-align: middle !important;
+    }
+
+    .lichday-page .schedule-item {
+        border-radius: 12px;
+        padding: 10px;
+        margin-bottom: 6px;
+        background: #eff6ff;
+        border-left: 4px solid #2563eb;
+        color: #1e3a8a;
+        box-shadow: 0 2px 8px rgba(37, 99, 235, .10);
+    }
+
+        .lichday-page .schedule-item.continue {
+            opacity: .55;
+            border-left-color: #94a3b8;
+            background: #f8fafc;
+            color: #475569;
+        }
+
+    .lichday-page .schedule-sub {
+        font-size: .8rem;
+        color: #475569;
+        margin-top: 3px;
+    }
+
+    .lichday-page .empty-cell {
+        color: #cbd5e1;
+        text-align: center;
+        padding-top: 26px;
+        font-size: .85rem;
+    }
+
+    .lichday-page .section-title {
+        font-weight: 800;
+        color: #1f2937;
+    }
+
+    .lichday-page .table thead th {
+        background: #f8fafc;
+        color: #475569;
+        font-size: .78rem;
+        text-transform: uppercase;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    .lichday-page .table tbody td {
+        vertical-align: middle;
+        font-size: .88rem;
+    }
+
+    .lichday-page .badge-soft-primary {
+        background: #dbeafe;
+        color: #1d4ed8;
+        font-weight: 700;
+    }
+
+    .lichday-page .empty-state {
+        padding: 34px;
+        text-align: center;
+        color: #64748b;
+    }
+
+    .lichday-page .btn {
+        border-radius: 10px;
+    }
+</style>
+
+<div class="lichday-page">
+
+    <div class="d-flex justify-content-between align-items-start flex-wrap mb-3">
+        <div>
+            <div class="page-title">
+                <i class="fas fa-calendar-check text-primary mr-2"></i>
+                Lịch dạy của tôi
+            </div>
+            <div class="page-subtitle">
+                Giảng viên xem lịch dạy theo học kỳ, môn học, lớp học phần, tiết học và phòng học.
+            </div>
+        </div>
+
+        <div class="mt-2 mt-md-0">
+            <a href="/LopHocPhan/Index" class="btn btn-light font-weight-bold">
+                <i class="fas fa-layer-group mr-1"></i>
+                Lớp học phần của tôi
+            </a>
+        </div>
+    </div>
+
+    <div class="card card-custom mb-4">
+        <div class="card-header bg-white">
+            <div class="font-weight-bold">
+                <i class="fas fa-filter text-primary mr-1"></i>
+                Bộ lọc dữ liệu
+            </div>
+        </div>
+
+        <form method="get" asp-controller="LopHocPhan" asp-action="LichDay">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <label>Học kỳ</label>
+                        <select name="maHocKy" class="form-control">
+                            <option value="">Tất cả học kỳ</option>
+                            @foreach (var hk in danhSachHocKy)
+                            {
+                                <option value="@hk.MaHocKy" selected="@(maHocKy == hk.MaHocKy)">
+                                    @hk.TenHocKy
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-lg-8 col-md-6 mb-3 d-flex align-items-end justify-content-end">
+                        <a href="/LopHocPhan/LichDay" class="btn btn-light font-weight-bold mr-2">
+                            <i class="fas fa-sync-alt mr-1"></i>
+                            Làm mới
+                        </a>
+
+                        <button type="submit" class="btn btn-primary font-weight-bold">
+                            <i class="fas fa-search mr-1"></i>
+                            Xem lịch
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-xl-4 col-md-6 col-12 mb-3">
+            <div class="stat-card bg-blue">
+                <div class="stat-number">@tongLopHocPhan</div>
+                <div class="stat-label">Lớp học phần đang dạy</div>
+                <i class="fas fa-layer-group stat-icon"></i>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 col-12 mb-3">
+            <div class="stat-card bg-green">
+                <div class="stat-number">@tongBuoiDay</div>
+                <div class="stat-label">Buổi dạy trong lịch</div>
+                <i class="fas fa-calendar-check stat-icon"></i>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 col-12 mb-3">
+            <div class="stat-card bg-orange">
+                <div class="stat-number">@tongSoTiet</div>
+                <div class="stat-label">Tổng số tiết giảng dạy</div>
+                <i class="fas fa-clock stat-icon"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="card card-custom mb-4">
+        <div class="card-header bg-white">
+            <div class="section-title">
+                <i class="fas fa-table text-primary mr-1"></i>
+                Thời khóa biểu giảng dạy
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered tkb-table mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width:80px;">Tiết</th>
+                            @for (int thu = 2; thu <= 8; thu++)
+                            {
+                                <th>@TenThu(thu)</th>
+                            }
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @for (int tiet = 1; tiet <= 10; tiet++)
+                        {
+                            <tr>
+                                <td class="tiet-label">
+                                    Tiết @tiet
+                                </td>
+
+                                @for (int thu = 2; thu <= 8; thu++)
+                                {
+                                    var danhSachTiet = Model
+                                        .Where(x => x.Thu == thu && LichCoTiet(x, tiet))
+                                        .OrderBy(x => x.TietBatDau)
+                                        .ToList();
+
+                                    <td>
+                                        @if (danhSachTiet.Any())
+                                        {
+                                            foreach (var item in danhSachTiet)
+                                            {
+                                                var lhp = item.MaLhpNavigation;
+                                                var mon = lhp?.MaMonNavigation;
+                                                bool laTietDau = tiet == item.TietBatDau;
+
+                                                <div class="schedule-item @(laTietDau ? "" : "continue")">
+                                                    <div class="font-weight-bold">
+                                                        @(laTietDau ? mon?.TenMon : "Tiếp tục")
+                                                    </div>
+
+                                                    <div class="schedule-sub">
+                                                        <i class="fas fa-layer-group mr-1"></i>
+                                                        LHP: <strong>@item.MaLhp</strong>
+                                                    </div>
+
+                                                    @if (laTietDau)
+                                                    {
+                                                        <div class="schedule-sub">
+                                                            <i class="fas fa-clock mr-1"></i>
+                                                            Tiết @item.TietBatDau - @(item.TietBatDau + item.SoTiet - 1)
+                                                        </div>
+
+                                                        <div class="schedule-sub">
+                                                            <i class="fas fa-door-open mr-1"></i>
+                                                            Phòng: @(lhp?.PhongHoc ?? "Chưa gán")
+                                                        </div>
+                                                    }
+                                                </div>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <div class="empty-cell">
+                                                -
+                                            </div>
+                                        }
+                                    </td>
+                                }
+                            </tr>
+
+                            if (tiet == 5)
+                            {
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted bg-light font-weight-bold">
+                                        Nghỉ giữa buổi
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card card-custom mb-4">
+        <div class="card-header bg-white">
+            <div class="section-title">
+                <i class="fas fa-list text-success mr-1"></i>
+                Danh sách lớp học phần giảng dạy
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Mã LHP</th>
+                            <th>Môn học</th>
+                            <th>Học kỳ</th>
+                            <th>Phòng</th>
+                            <th>Thứ</th>
+                            <th class="text-center">Tiết</th>
+                            <th class="text-center">Số tiết</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            var lhp = item.MaLhpNavigation;
+
+                            <tr>
+                                <td>
+                                    <span class="badge badge-soft-primary p-2">
+                                        @item.MaLhp
+                                    </span>
+                                </td>
+
+                                <td class="font-weight-bold">
+                                    @lhp?.MaMonNavigation?.TenMon
+                                </td>
+
+                                <td>
+                                    @lhp?.MaHocKyNavigation?.TenHocKy
+                                </td>
+
+                                <td>
+                                    @(lhp?.PhongHoc ?? "Chưa gán")
+                                </td>
+
+                                <td>
+                                    @TenThu(item.Thu)
+                                </td>
+
+                                <td class="text-center font-weight-bold">
+                                    @item.TietBatDau - @(item.TietBatDau + item.SoTiet - 1)
+                                </td>
+
+                                <td class="text-center">
+                                    @item.SoTiet
+                                </td>
+                            </tr>
+                        }
+
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="7">
+                                    <div class="empty-state">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        Chưa có lịch dạy phù hợp với bộ lọc.
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>

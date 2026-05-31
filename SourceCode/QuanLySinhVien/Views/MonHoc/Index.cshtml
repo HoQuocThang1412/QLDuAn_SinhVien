@@ -1,0 +1,263 @@
+﻿@model IEnumerable<QuanLySinhVien.Models.MonHoc>
+@{
+    ViewData["Title"] = "Danh sách môn học";
+    string cn = ViewBag.MaChuyenNganh ?? "";
+}
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-theme/0.1.0-beta.10/select2-bootstrap.min.css" rel="stylesheet" />
+
+<style>
+    /* Chữa bệnh tàng hình cho tiêu đề khi cuộn */
+    .table-head-fixed th {
+        background-color: #343a40 !important;
+        color: #ffffff !important;
+        border-bottom: 0 !important;
+        box-shadow: inset 0 -1px 0 #dee2e6;
+        z-index: 10;
+    }
+
+    .mon-dieu-kien {
+        color: #dc3545;
+        font-weight: bold;
+        font-size: 16px;
+    }
+</style>
+
+<div class="card">
+    <div class="card-header">
+        <form method="get" action="/MonHoc/Index">
+            <div class="row align-items-center">
+
+                <div class="col-md-3 mb-2">
+                    <input type="text" name="tuKhoa" value="@ViewBag.TuKhoa" class="form-control" placeholder="Tìm theo tên hoặc mã môn...">
+                </div>
+
+                <div class="col-md-3 mb-2">
+                    <select name="maKhoa" id="filterKhoa" class="form-control select2" style="width: 100%;">
+                        <option value="">-- Tất cả khoa --</option>
+                        @if (ViewBag.DanhSachKhoa != null)
+                        {
+                            foreach (var khoa in ViewBag.DanhSachKhoa)
+                            {
+                                <option value="@khoa.MaKhoa" selected="@(ViewBag.MaKhoa == khoa.MaKhoa ? "selected" : null)">
+                                    @khoa.TenKhoa
+                                </option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-3 mb-2" id="divFilterCN" style="display:@(ViewBag.MaKhoa == "SP" ? "block" : "none")">
+                    <select name="maChuyenNganh" id="filterCN" class="form-control select2" style="width: 100%;">
+                        <option value="">-- Tất cả CN --</option>
+                        <option value="Toan" selected="@(cn == "Toan" ? "selected" : null)">SP Toán</option>
+                        <option value="Van" selected="@(cn == "Van" ? "selected" : null)">SP Ngữ Văn</option>
+                        <option value="Anh" selected="@(cn == "Anh" ? "selected" : null)">SP Tiếng Anh</option>
+                        <option value="Ly" selected="@(cn == "Ly" ? "selected" : null)">SP Vật Lý</option>
+                        <option value="Hoa" selected="@(cn == "Hoa" ? "selected" : null)">SP Hóa Học</option>
+                        <option value="Sinh" selected="@(cn == "Sinh" ? "selected" : null)">SP Sinh Học</option>
+                        <option value="Dia" selected="@(cn == "Dia" ? "selected" : null)">SP Địa Lý</option>
+                        <option value="Su" selected="@(cn == "Su" ? "selected" : null)">SP Lịch Sử</option>
+                        <option value="Tin" selected="@(cn == "Tin" ? "selected" : null)">SP Tin Học</option>
+                        <option value="GDCD" selected="@(cn == "GDCD" ? "selected" : null)">SP GDCD</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3 mb-2 d-flex">
+                    <button type="submit" class="btn btn-primary flex-fill mr-1" title="Lọc">
+                        <i class="fas fa-filter"></i> Lọc
+                    </button>
+                    <a href="/MonHoc/Index" class="btn btn-default flex-fill text-center" title="Xóa lọc">
+                        <i class="fas fa-sync"></i> Xoá lọc
+                    </a>
+                </div>
+            </div>
+
+            <div class="row mt-1">
+                <div class="col-md-12 text-left">
+                    @if (User.IsInRole("Admin") || User.IsInRole("CanBo"))
+                    {
+                        <a href="/MonHoc/Create" class="btn btn-success">
+                            <i class="fas fa-plus mr-1"></i> Thêm môn học
+                        </a>
+                    }
+                </div>
+            </div>
+        </form>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show m-3 shadow-sm" role="alert">
+            <i class="fas fa-check-circle mr-2"></i> @TempData["Success"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show m-3 shadow-sm" role="alert">
+            <i class="fas fa-exclamation-triangle mr-2"></i> @TempData["Error"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    <div class="card-body p-0 table-responsive" style="max-height: 550px; overflow-y: auto;">
+        <table class="table table-bordered table-striped table-hover text-nowrap table-head-fixed mb-0">
+            <thead class="thead-dark">
+                <tr>
+                    <th style="width:100px">Mã môn</th>
+                    <th>Tên môn học</th>
+                    <th style="width:180px">Khoa</th>
+                    <th style="width:80px" class="text-center">Tín chỉ</th>
+                    <th style="width:90px" class="text-center">Hệ số QT</th>
+                    <th style="width:90px" class="text-center">Hệ số CK</th>
+                    <th style="width:130px" class="text-center">Môn điều kiện</th>
+                    <th style="width:160px">Môn tiên quyết</th>
+                    <th style="width:130px" class="text-center">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-5">
+                            <i class="fas fa-search fa-3x mb-3 d-block text-secondary"></i>
+                            <h5 class="mb-1">Chưa có dữ liệu môn học.</h5>
+                            <p class="mb-0">Vui lòng sử dụng bộ lọc bên trên để tìm kiếm (Ví dụ: Chọn Khoa hoặc Gõ Tên).</p>
+                        </td>
+                    </tr>
+                }
+
+                @foreach (var mon in Model)
+                {
+                    <tr>
+                        <td><code>@mon.MaMon</code></td>
+
+                        <td class="font-weight-bold">
+                            @mon.TenMon
+                            @if (mon.IsDieuKien)
+                            {
+                                <span class="mon-dieu-kien" title="Môn điều kiện — không tính GPA">*</span>
+                            }
+                        </td>
+
+                        <td>@mon.MaKhoaNavigation?.TenKhoa</td>
+
+                        <td class="text-center">
+                            <span class="badge badge-primary">@mon.SoTinChi TC</span>
+                        </td>
+
+                        <td class="text-center">@mon.HeSoQt.ToString("0.00")</td>
+                        <td class="text-center">@mon.HeSoCk.ToString("0.00")</td>
+
+                        <td class="text-center">
+                            @if (mon.IsDieuKien)
+                            {
+                                <span class="badge badge-danger" title="Môn điều kiện, không tính GPA">
+                                    Không tính GPA
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-success">Tính GPA</span>
+                            }
+                        </td>
+
+                        <td>
+                            @if (!string.IsNullOrEmpty(mon.MaMonTienQuyet))
+                            {
+                                <code>@mon.MaMonTienQuyet</code>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Không có</span>
+                            }
+                        </td>
+
+                        <td class="text-center">
+                            <a href="/MonHoc/Detail/@mon.MaMon" class="btn btn-info btn-sm" title="Xem">
+                                <i class="fas fa-eye"></i>
+                            </a>
+
+                            @if (User.IsInRole("Admin") || User.IsInRole("CanBo"))
+                            {
+                                <a href="/MonHoc/Edit/@mon.MaMon" class="btn btn-warning btn-sm" title="Sửa">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <form method="post" action="/MonHoc/Delete/@mon.MaMon" style="display:inline-block" onsubmit="return confirm('Xoá môn @mon.TenMon?')">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-danger btn-sm" title="Xoá">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                }
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card-footer clearfix">
+        <div class="float-left pt-1">
+            <small class="text-muted">Tổng: <strong>@ViewBag.TongSo</strong> môn học</small>
+        </div>
+
+        @if (ViewBag.TongTrang > 1)
+        {
+            <ul class="pagination pagination-sm float-right mb-0">
+                <li class="page-item @(ViewBag.Trang <= 1 ? "disabled" : "")">
+                    <a class="page-link" href="/MonHoc/Index?trang=@(ViewBag.Trang - 1)&tuKhoa=@ViewBag.TuKhoa&maKhoa=@ViewBag.MaKhoa&maChuyenNganh=@ViewBag.MaChuyenNganh">«</a>
+                </li>
+
+                @for (int i = 1; i <= ViewBag.TongTrang; i++)
+                {
+                    <li class="page-item @(i == ViewBag.Trang ? "active" : "")">
+                        <a class="page-link" href="/MonHoc/Index?trang=@i&tuKhoa=@ViewBag.TuKhoa&maKhoa=@ViewBag.MaKhoa&maChuyenNganh=@ViewBag.MaChuyenNganh">@i</a>
+                    </li>
+                }
+
+                <li class="page-item @(ViewBag.Trang >= ViewBag.TongTrang ? "disabled" : "")">
+                    <a class="page-link" href="/MonHoc/Index?trang=@(ViewBag.Trang + 1)&tuKhoa=@ViewBag.TuKhoa&maKhoa=@ViewBag.MaKhoa&maChuyenNganh=@ViewBag.MaChuyenNganh">»</a>
+                </li>
+            </ul>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+        // KÍCH HOẠT TÍNH NĂNG GÕ ĐỂ TÌM KIẾM (SELECT2)
+        $('.select2').select2({
+        theme: "bootstrap",
+        width: '100%'
+        });
+
+        // CẬP NHẬT LOGIC CHỌN KHOA ĐỂ CHẠY MƯỢT VỚI SELECT2
+        $('#filterKhoa').on('change', function () {
+        var selValue = $(this).val();
+        var divCN = document.getElementById('divFilterCN');
+
+        if (selValue === 'SP') {
+        divCN.style.display = 'block';
+        } else {
+        divCN.style.display = 'none';
+        $('#filterCN').val('').trigger('change.select2');
+        }
+        });
+        });
+    </script>
+}

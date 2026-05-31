@@ -1,0 +1,40 @@
+﻿# ==========================================
+# 1. BỎ QUA CÁC FILE BIÊN DỊCH & THƯ MỤC TẠM (DÂN .NET PHẢI CÓ)
+# ==========================================
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.suo
+*.userosscache
+*.sln.docstates
+
+# ==========================================
+# 2. BỎ QUA FILE CONFIG CÁ NHÂN & BẢO MẬT (CỰC KỲ QUAN TRỌNG)
+# ==========================================
+secrets.json
+appsettings.Local.json
+appsettings.Production.json
+.env
+.env.local
+
+# ==========================================
+# 3. CHẶN FILE DATABASE NẶNG / LOCAL (KHÔNG CHẶN FILE SCRIPT .SQL)
+# ==========================================
+*.mdf
+*.ldf
+*.bak
+
+# ==========================================
+# 4. FILE LOG VÀ FILE TẠM
+# ==========================================
+*.log
+*.tmp
+*.crdownload
+
+# ==========================================
+# 5. FILE RÁC HỆ ĐIỀU HÀNH
+# ==========================================
+.DS_Store
+Thumbs.db

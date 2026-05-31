@@ -1,0 +1,325 @@
+﻿@model List<QuanLySinhVien.Models.DangKyHoc>
+@{
+    ViewData["Title"] = "Bảng điểm của tôi";
+
+    // ── Quy đổi sang điểm chữ ──
+    string LayDiemChu(double? diem)
+    {
+        if (diem == null) return "";
+        if (diem >= 8.5) return "A";
+        if (diem >= 8.0) return "B+";
+        if (diem >= 7.0) return "B";
+        if (diem >= 6.5) return "C+";
+        if (diem >= 5.5) return "C";
+        if (diem >= 5.0) return "D+";
+        if (diem >= 4.0) return "D";
+        return "F";
+    }
+
+    // ── Quy đổi sang hệ 4 ──
+    double LayDiem4(double? diem)
+    {
+        if (diem == null) return 0;
+        if (diem >= 8.5) return 4.0;
+        if (diem >= 8.0) return 3.5;
+        if (diem >= 7.0) return 3.0;
+        if (diem >= 6.5) return 2.5;
+        if (diem >= 5.5) return 2.0;
+        if (diem >= 5.0) return 1.5;
+        if (diem >= 4.0) return 1.0;
+        return 0.0;
+    }
+
+    // ── Môn điều kiện: KHÔNG tính GPA, KHÔNG tính tích lũy ──
+    // Dùng cột MonHoc.IsDieuKien thay vì dò theo tên môn.
+    bool TinhVaoGPA(QuanLySinhVien.Models.MonHoc? mon)
+    {
+        if (mon == null) return true;
+        return !mon.IsDieuKien;
+    }
+
+    string? maHocKyFilter = ViewBag.MaHocKyDangChon as string;
+}
+
+<style>
+    .row-semester td {
+        background-color: #e9ecef;
+        color: #002147;
+        font-weight: bold;
+        font-size: 15px;
+    }
+
+    .bg-tongket {
+        background-color: #fff8e1;
+        border: 1px solid #ffecb3;
+        padding: 15px;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    .mon-dieu-kien {
+        color: #dc3545;
+        font-weight: bold;
+        margin-left: 5px;
+    }
+</style>
+
+<div class="card card-outline card-primary shadow-sm">
+    <div class="card-header">
+        <h3 class="card-title">
+            <strong>
+                <i class="fas fa-graduation-cap text-primary mr-1"></i> KẾT QUẢ HỌC TẬP
+            </strong>
+        </h3>
+
+        <div class="card-tools">
+            <form asp-action="TraCuu" method="get" class="form-inline">
+                <label class="mr-2">Học kỳ: </label>
+                <select name="maHocKy" class="form-control form-control-sm mr-2" onchange="this.form.submit()">
+                    <option value="">-- Tất cả học kỳ --</option>
+                    @if (ViewBag.DanhSachHK != null)
+                    {
+                        foreach (var hk in ViewBag.DanhSachHK)
+                        {
+                            <option value="@hk.MaHocKy" selected="@(maHocKyFilter == hk.MaHocKy ? "selected" : null)">
+                                @hk.TenHocKy
+                            </option>
+                        }
+                    }
+                </select>
+            </form>
+        </div>
+    </div>
+
+    <div class="card-body p-0">
+        @if (ViewBag.KhoaBangDiem == true)
+        {
+            <div class="alert alert-warning m-3">
+                <h5 class="mb-2">
+                    <i class="fas fa-lock mr-1"></i> Bảng điểm đang bị khóa
+                </h5>
+                <p class="mb-0">
+                    Vui lòng hoàn thành học phí học kỳ này để xem điểm.
+                    Số tiền còn nợ: <strong>@(((decimal)ViewBag.ConNoHocPhi).ToString("N0")) đ</strong>
+                </p>
+            </div>
+        }
+        else if (Model == null || !Model.Any())
+        {
+            <div class="text-center py-5">
+                <h5 class="text-muted">
+                    <i class="fas fa-info-circle"></i> Bạn chưa có dữ liệu điểm.
+                </h5>
+            </div>
+        }
+        else
+        {
+            // giữ nguyên toàn bộ phần bảng điểm hiện tại trong else này
+        }
+        @if (Model == null || !Model.Any())
+        {
+            <div class="text-center py-5">
+                <h5 class="text-muted">
+                    <i class="fas fa-info-circle"></i> Bạn chưa có dữ liệu điểm.
+                </h5>
+            </div>
+        }
+        else
+        {
+            <div class="p-3 bg-light border-bottom text-muted italic small">
+                <strong><u>Ghi chú:</u></strong>
+                Những môn có dấu <span class="mon-dieu-kien">(*)</span>
+                sẽ không tính điểm trung bình và không tính vào GPA hệ 4.
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered text-center mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th style="width: 50px;">STT</th>
+                            <th>Mã học phần</th>
+                            <th class="text-left">Tên học phần</th>
+                            <th>Tín chỉ</th>
+                            <th>Điểm 10</th>
+                            <th>Điểm 4</th>
+                            <th>Điểm chữ</th>
+                            <th>Kết quả</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @{
+                            var danhSachTheoHocKy = Model
+                                .GroupBy(m => m.MaHocKy)
+                                .OrderBy(g => g.First().MaLhpNavigation?.MaHocKyNavigation?.TenHocKy)
+                                .ToList();
+
+                            int tongTcTichLuy = 0;
+                            double tongD10TichLuy = 0;
+                            double tongD4TichLuy = 0;
+                            int stt = 1;
+                        }
+
+                        @foreach (var hkGroup in danhSachTheoHocKy)
+                        {
+                            int hkTinChiTong = 0;
+                            int hkTinChiDat = 0;
+                            int hkTinChiGPA = 0;
+                            double hkDiem10 = 0;
+                            double hkDiem4 = 0;
+
+                            string tenHkHienTai = hkGroup.First().MaLhpNavigation?.MaHocKyNavigation?.TenHocKy ?? hkGroup.Key;
+                            bool isHienThi = string.IsNullOrEmpty(maHocKyFilter) || maHocKyFilter == hkGroup.Key;
+
+                            if (isHienThi)
+                            {
+                                <tr class="row-semester">
+                                    <td colspan="8" class="text-left text-primary">
+                                        <i class="fas fa-calendar-alt mr-2"></i> @tenHkHienTai
+                                    </td>
+                                </tr>
+                            }
+
+                            foreach (var item in hkGroup)
+                            {
+                                var kq = item.KetQuaHocTap;
+                                int tc = item.MaMonNavigation?.SoTinChi ?? 0;
+                                double? d10 = (double?)kq?.DiemTongKet;
+                                bool isVaoGPA = TinhVaoGPA(item.MaMonNavigation);
+
+                                hkTinChiTong += tc;
+
+                                if (d10.HasValue && d10.Value >= 4.0)
+                                {
+                                    hkTinChiDat += tc;
+                                }
+
+                                if (d10.HasValue && isVaoGPA)
+                                {
+                                    double d4 = LayDiem4(d10);
+
+                                    hkTinChiGPA += tc;
+                                    hkDiem10 += d10.Value * tc;
+                                    hkDiem4 += d4 * tc;
+
+                                    if (d10.Value >= 4.0)
+                                    {
+                                        tongTcTichLuy += tc;
+                                        tongD10TichLuy += d10.Value * tc;
+                                        tongD4TichLuy += d4 * tc;
+                                    }
+                                }
+
+                                if (isHienThi)
+                                {
+                                    string diemChu = isVaoGPA ? LayDiemChu(d10) : "-";
+
+                                    string diem4Str;
+                                    if (!d10.HasValue)
+                                    {
+                                        diem4Str = "-";
+                                    }
+                                    else if (!isVaoGPA)
+                                    {
+                                        diem4Str = "(*)";
+                                    }
+                                    else
+                                    {
+                                        diem4Str = LayDiem4(d10).ToString("0.0");
+                                    }
+
+                                    <tr>
+                                        <td>@(stt++)</td>
+                                        <td>@item.MaMon</td>
+                                        <td class="text-left font-weight-bold">
+                                            @item.MaMonNavigation?.TenMon
+                                            @if (!isVaoGPA)
+                                            {
+                                                <span class="mon-dieu-kien" title="Môn điều kiện — không tính GPA">*</span>
+                                            }
+                                        </td>
+                                        <td>@tc</td>
+                                        <td class="font-weight-bold">
+                                            @(d10.HasValue ? d10.Value.ToString("0.0") : "-")
+                                        </td>
+                                        <td class="font-weight-bold @(!isVaoGPA ? "text-muted" : "")">
+                                            @diem4Str
+                                        </td>
+                                        <td class="font-weight-bold text-warning">
+                                            @diemChu
+                                        </td>
+                                        <td>
+                                            @if (kq?.QuaMon == true)
+                                            {
+                                                <i class="fas fa-check-circle text-success" title="Đạt"></i>
+                                            }
+                                            else if (kq != null)
+                                            {
+                                                <i class="fas fa-times text-danger font-weight-bold" title="Không đạt"></i>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+
+                            double gpa10Hk = hkTinChiGPA > 0 ? Math.Round(hkDiem10 / hkTinChiGPA, 2) : 0;
+                            double gpa4Hk = hkTinChiGPA > 0 ? Math.Round(hkDiem4 / hkTinChiGPA, 2) : 0;
+                            double gpa10TichLuy = tongTcTichLuy > 0 ? Math.Round(tongD10TichLuy / tongTcTichLuy, 2) : 0;
+                            double gpa4TichLuy = tongTcTichLuy > 0 ? Math.Round(tongD4TichLuy / tongTcTichLuy, 2) : 0;
+
+                            if (isHienThi)
+                            {
+                                <tr>
+                                    <td colspan="8" class="p-0 border-0 text-left">
+                                        <div class="bg-tongket border-top">
+                                            <div class="row">
+                                                <div class="col-md-6 border-right border-secondary">
+                                                    <div class="font-weight-bold text-dark">
+                                                        - Tổng số tín chỉ: @hkTinChiTong
+                                                    </div>
+
+                                                    <div class="font-weight-bold text-dark">
+                                                        - Tín chỉ đạt: @hkTinChiDat
+                                                        <span class="text-muted font-weight-normal">
+                                                            | Không đạt: @(hkTinChiTong - hkTinChiDat)
+                                                        </span>
+                                                    </div>
+
+                                                    <div class="font-weight-bold text-dark">
+                                                        - ĐTB học kỳ (Hệ 10):
+                                                        <span class="text-primary">@gpa10Hk</span>
+                                                    </div>
+
+                                                    <div class="font-weight-bold text-dark">
+                                                        - ĐTB học kỳ (Hệ 4):
+                                                        <span class="text-danger">@gpa4Hk</span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-6 pl-md-4">
+                                                    <div class="font-weight-bold text-dark">
+                                                        - TC tích lũy: @tongTcTichLuy
+                                                    </div>
+
+                                                    <div class="font-weight-bold text-dark">
+                                                        - ĐTB tích lũy (Hệ 10):
+                                                        <span class="text-primary">@gpa10TichLuy</span>
+                                                    </div>
+
+                                                    <div class="font-weight-bold text-dark">
+                                                        - ĐTB tích lũy (Hệ 4):
+                                                        <span class="text-danger">@gpa4TichLuy</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

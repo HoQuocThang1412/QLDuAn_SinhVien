@@ -1,0 +1,98 @@
+﻿@model QuanLySinhVien.Models.HocKy
+@{
+    ViewData["Title"] = "Thêm học kỳ mới";
+}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-calendar-plus mr-2"></i> Thêm học kỳ mới
+                </h3>
+            </div>
+
+            <form method="post" action="/HocKy/Create">
+                @Html.AntiForgeryToken()
+                <div class="card-body">
+
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle mr-1"></i>
+                            <strong>Vui lòng kiểm tra lại:</strong>
+                            <ul class="mb-0 mt-1">
+                                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                                {
+                                    <li>@error.ErrorMessage</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    <div class="form-group">
+                        <label>Mã học kỳ <span class="text-danger">*</span></label>
+                        <input type="text" name="MaHocKy" value="@Model?.MaHocKy"
+                               class="form-control" placeholder="VD: HK1-2024-2025"
+                               maxlength="20" required>
+                        <small class="text-muted">VD: HK1-2024-2025, HK2-2024-2025</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tên học kỳ <span class="text-danger">*</span></label>
+                        <input type="text" name="TenHocKy" value="@Model?.TenHocKy"
+                               class="form-control"
+                               placeholder="VD: Học kỳ 1 năm học 2024-2025" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label font-weight-bold">Giới hạn tín chỉ tối đa</label>
+                        <input type="number"
+                               name="GioiHanTinChi"
+                               class="form-control text-danger font-weight-bold"
+                               value="@(Model?.GioiHanTinChi ?? 25)"
+                               min="1"
+                               max="50"
+                               step="1"
+                               required />
+                        <small class="form-text text-muted">Số tín chỉ lớn nhất sinh viên được phép đăng ký trong kỳ này (Mặc định: 25).</small>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Ngày bắt đầu <span class="text-danger">*</span></label>
+                                <input type="date" name="NgayBatDau"
+                                       class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Ngày kết thúc <span class="text-danger">*</span></label>
+                                <input type="date" name="NgayKetThuc"
+                                       class="form-control" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Trạng thái <span class="text-danger">*</span></label>
+                        <select name="TrangThai" class="form-control" required>
+                            <option value="Sắp diễn ra">Sắp diễn ra</option>
+                            <option value="Đang diễn ra">Đang diễn ra</option>
+                            <option value="Đã kết thúc">Đã kết thúc</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save mr-1"></i> Lưu học kỳ
+                    </button>
+                    <a href="/HocKy/Index" class="btn btn-default ml-2">
+                        <i class="fas fa-arrow-left mr-1"></i> Quay lại
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

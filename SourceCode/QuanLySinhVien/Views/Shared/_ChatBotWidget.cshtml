@@ -1,0 +1,320 @@
+@*
+    Floating ChatBot Widget (Gemini-powered)
+    Hiển thị nút tròn góc phải dưới. Yêu cầu user đã đăng nhập.
+*@
+@{
+    var role = User.IsInRole("SinhVien") ? "SinhVien"
+            : User.IsInRole("GiangVien") ? "GiangVien"
+            : User.IsInRole("Admin") ? "Admin"
+            : User.IsInRole("CanBo") ? "CanBo" : "Guest";
+    var greet = role switch
+    {
+        "SinhVien" => "Xin chào bạn sinh viên! Mình có thể tra điểm, học phí, lịch học... Hỏi mình bất cứ điều gì nhé.",
+        "GiangVien" => "Chào thầy/cô! Mình giúp tra cứu thông tin sinh viên, môn học, lớp học phần.",
+        "Admin" => "Chào Admin! Hỏi mình mọi thứ về dữ liệu hệ thống.",
+        "CanBo" => "Chào cán bộ! Mình giúp tra dữ liệu sinh viên / giảng viên / môn học.",
+        _ => "Bạn cần đăng nhập để dùng chatbot."
+    };
+}
+
+<form id="chatbot-af-form" style="display:none">@Html.AntiForgeryToken()</form>
+
+<style>
+    .qnu-chatbot-fab {
+        position: fixed; right: 24px; bottom: 24px;
+        width: 60px; height: 60px; border-radius: 50%;
+        background: linear-gradient(135deg, #4285f4, #34a853);
+        color: #fff; border: none; cursor: pointer;
+        box-shadow: 0 6px 20px rgba(0,0,0,.25);
+        font-size: 26px; z-index: 9998;
+        display: flex; align-items: center; justify-content: center;
+        transition: transform .2s;
+    }
+    .qnu-chatbot-fab:hover { transform: scale(1.08); }
+    .qnu-chatbot-fab .badge-ai {
+        position: absolute; bottom: 4px; right: 4px;
+        background: #ea4335; color: #fff; font-size: 9px;
+        padding: 2px 5px; border-radius: 8px; font-weight: 600;
+    }
+
+    .qnu-chatbot-panel {
+        position: fixed; right: 24px; bottom: 100px;
+        width: 400px; max-width: 92vw; height: 560px; max-height: 80vh;
+        background: #fff; border-radius: 14px;
+        box-shadow: 0 12px 35px rgba(0,0,0,.28);
+        display: none; flex-direction: column; overflow: hidden;
+        z-index: 9999; font-size: 14px;
+        animation: qnuFadeIn .25s ease-out;
+    }
+    @@keyframes qnuFadeIn { from { opacity:0; transform: translateY(15px) } to { opacity:1; transform:none } }
+
+    .qnu-chatbot-header {
+        background: linear-gradient(135deg, #4285f4, #34a853);
+        color: #fff; padding: 12px 16px;
+        display: flex; align-items: center; justify-content: space-between;
+    }
+    .qnu-chatbot-header .title { font-weight: 600; font-size: 15px; }
+    .qnu-chatbot-header .sub { font-size: 11px; opacity: .85; }
+    .qnu-chatbot-header .icons button {
+        background: transparent; border: none; color: #fff;
+        font-size: 16px; cursor: pointer; padding: 0 6px;
+    }
+
+    .qnu-chatbot-body {
+        flex: 1; padding: 12px; overflow-y: auto;
+        background: #f4f6fb;
+    }
+    .qnu-msg { display: flex; margin-bottom: 10px; }
+    .qnu-msg.bot { justify-content: flex-start; }
+    .qnu-msg.user { justify-content: flex-end; }
+    .qnu-msg .bubble {
+        max-width: 88%; padding: 9px 12px; border-radius: 12px;
+        line-height: 1.5; word-wrap: break-word; box-shadow: 0 1px 2px rgba(0,0,0,.05);
+    }
+    .qnu-msg.bot .bubble { background: #fff; border-top-left-radius: 4px; color: #222; }
+    .qnu-msg.user .bubble { background: #4285f4; color: #fff; border-top-right-radius: 4px; }
+    .qnu-msg .bubble p { margin: 0 0 6px 0; }
+    .qnu-msg .bubble p:last-child { margin: 0; }
+    .qnu-msg .bubble ul, .qnu-msg .bubble ol { padding-left: 20px; margin: 4px 0; }
+    .qnu-msg .bubble code {
+        background: #eef1f6; padding: 1px 5px; border-radius: 4px; font-size: 12px;
+    }
+    .qnu-msg .bubble table {
+        border-collapse: collapse; margin: 6px 0; font-size: 12px; width: 100%;
+    }
+    .qnu-msg .bubble th, .qnu-msg .bubble td {
+        border: 1px solid #d6dae3; padding: 4px 6px; text-align: left;
+    }
+    .qnu-msg .bubble th { background: #f0f2f5; }
+    .qnu-msg.user .bubble code { background: rgba(255,255,255,.25); color: #fff; }
+
+    .qnu-chatbot-foot {
+        border-top: 1px solid #e3e6ee; padding: 8px;
+        display: flex; gap: 6px; background: #fff;
+    }
+    .qnu-chatbot-foot input {
+        flex: 1; border: 1px solid #d6dae3; border-radius: 8px;
+        padding: 8px 10px; font-size: 14px; outline: none;
+    }
+    .qnu-chatbot-foot input:focus { border-color: #4285f4; }
+    .qnu-chatbot-foot button {
+        background: #4285f4; color: #fff; border: none;
+        padding: 0 14px; border-radius: 8px; cursor: pointer; font-weight: 600;
+    }
+    .qnu-chatbot-foot button:disabled { background: #aac5fa; cursor: not-allowed; }
+
+    .qnu-quick {
+        display: flex; flex-wrap: wrap; gap: 6px; padding: 0 12px 8px;
+        background: #f4f6fb;
+    }
+    .qnu-quick button {
+        background: #fff; border: 1px solid #cfd6e4; color: #2754a6;
+        border-radius: 20px; padding: 4px 10px; font-size: 12px; cursor: pointer;
+    }
+    .qnu-quick button:hover { background: #e8f0ff; }
+
+    .qnu-tools-tag {
+        font-size: 10px; color: #888; padding: 2px 0 0; margin-top: 4px;
+        border-top: 1px dashed #e1e5ec;
+    }
+</style>
+
+<button class="qnu-chatbot-fab" id="qnuChatFab" title="Trợ lý AI - Gemini">
+    <i class="fas fa-robot"></i>
+    <span class="badge-ai">AI</span>
+</button>
+
+<div class="qnu-chatbot-panel" id="qnuChatPanel">
+    <div class="qnu-chatbot-header">
+        <div>
+            <div class="title"><i class="fas fa-sparkles mr-1"></i> Trợ lý QNU <span style="font-size:10px;background:rgba(255,255,255,.2);padding:1px 5px;border-radius:6px">Gemini</span></div>
+            <div class="sub">Hỏi gì cũng được - mình đọc DB trực tiếp</div>
+        </div>
+        <div class="icons">
+            <button id="qnuChatClear" title="Xóa hội thoại"><i class="fas fa-redo"></i></button>
+            <button id="qnuChatClose" title="Đóng">&times;</button>
+        </div>
+    </div>
+
+    <div class="qnu-chatbot-body" id="qnuChatBody">
+        <div class="qnu-msg bot"><div class="bubble">@greet</div></div>
+    </div>
+
+    <div class="qnu-quick" id="qnuQuick">
+        @if (role == "SinhVien")
+        {
+            <button data-q="Cho mình xem điểm của mình">Điểm của tôi</button>
+            <button data-q="Điểm trung bình tích lũy của em">GPA</button>
+            <button data-q="Học phí của tôi bao nhiêu?">Học phí</button>
+            <button data-q="Lịch học của tôi">Lịch học</button>
+        }
+        else
+        {
+            <button data-q="Liệt kê các khoa">DS khoa</button>
+            <button data-q="Liệt kê các môn học">DS môn</button>
+            <button data-q="Các học kỳ hiện có">Học kỳ</button>
+        }
+    </div>
+
+    <div class="qnu-chatbot-foot">
+        <input type="text" id="qnuChatInput" placeholder="Hỏi gì cũng được..." autocomplete="off" maxlength="500" />
+        <button id="qnuChatSend" type="button"><i class="fas fa-paper-plane"></i></button>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const fab = document.getElementById('qnuChatFab');
+        const panel = document.getElementById('qnuChatPanel');
+        const closeBtn = document.getElementById('qnuChatClose');
+        const clearBtn = document.getElementById('qnuChatClear');
+        const body = document.getElementById('qnuChatBody');
+        const input = document.getElementById('qnuChatInput');
+        const sendBtn = document.getElementById('qnuChatSend');
+        const quick = document.getElementById('qnuQuick');
+        const tokenEl = document.querySelector('#chatbot-af-form input[name="__RequestVerificationToken"]');
+        const token = tokenEl ? tokenEl.value : '';
+
+        // History lưu local để gửi kèm mỗi request (multi-turn context)
+        let history = [];
+        const initialGreet = body.innerHTML;
+
+        function openPanel() { panel.style.display = 'flex'; fab.style.display = 'none'; input.focus(); }
+        function closePanel() { panel.style.display = 'none'; fab.style.display = 'flex'; }
+
+        fab.addEventListener('click', openPanel);
+        closeBtn.addEventListener('click', closePanel);
+        clearBtn.addEventListener('click', () => {
+            if (!confirm('Xóa hội thoại hiện tại?')) return;
+            history = [];
+            body.innerHTML = initialGreet;
+        });
+
+        function escapeHtml(s) {
+            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        // Minimal markdown → HTML (safe: chỉ xử lý các pattern cụ thể, không inject HTML thô)
+        function md(text) {
+            if (!text) return '';
+            let s = escapeHtml(text);
+
+            // Code block ```...```
+            s = s.replace(/```([\s\S]*?)```/g, (_, c) => '<pre style="background:#eef1f6;padding:8px;border-radius:6px;font-size:12px;overflow-x:auto"><code>' + c + '</code></pre>');
+            // Inline code `...`
+            s = s.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+            // Bold **text**
+            s = s.replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>');
+            // Italic *text*  (sau bold để không xung đột)
+            s = s.replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<i>$2</i>');
+            // Headings ### / ##
+            s = s.replace(/^###\s+(.+)$/gm, '<div style="font-weight:600;margin:6px 0 2px">$1</div>');
+            s = s.replace(/^##\s+(.+)$/gm, '<div style="font-weight:700;font-size:15px;margin:6px 0 4px">$1</div>');
+
+            // Tables: | a | b | / | --- | --- | / | x | y |
+            s = s.replace(/((?:^\|.*\|\s*\n?)+)/gm, block => {
+                const lines = block.trim().split('\n').filter(l => l.startsWith('|'));
+                if (lines.length < 2) return block;
+                const rows = lines.map(l => l.replace(/^\||\|$/g, '').split('|').map(c => c.trim()));
+                const sep = rows[1];
+                if (!sep.every(c => /^-+$/.test(c))) return block;
+                const header = rows[0];
+                const dataRows = rows.slice(2);
+                let html = '<table><thead><tr>' + header.map(h => '<th>' + h + '</th>').join('') + '</tr></thead><tbody>';
+                dataRows.forEach(r => { html += '<tr>' + r.map(c => '<td>' + c + '</td>').join('') + '</tr>'; });
+                html += '</tbody></table>';
+                return html;
+            });
+
+            // Unordered list
+            s = s.replace(/(^|\n)(\s*[-*]\s+.+(?:\n\s*[-*]\s+.+)*)/g, (m, pre, list) => {
+                const items = list.split('\n').map(l => l.replace(/^\s*[-*]\s+/, '').trim()).filter(Boolean);
+                return pre + '<ul>' + items.map(i => '<li>' + i + '</li>').join('') + '</ul>';
+            });
+            // Ordered list
+            s = s.replace(/(^|\n)(\s*\d+\.\s+.+(?:\n\s*\d+\.\s+.+)*)/g, (m, pre, list) => {
+                const items = list.split('\n').map(l => l.replace(/^\s*\d+\.\s+/, '').trim()).filter(Boolean);
+                return pre + '<ol>' + items.map(i => '<li>' + i + '</li>').join('') + '</ol>';
+            });
+
+            // Đoạn văn / xuống dòng
+            s = s.split(/\n{2,}/).map(p => {
+                if (/^<(ul|ol|table|pre|div)/i.test(p.trim())) return p;
+                return '<p>' + p.replace(/\n/g, '<br>') + '</p>';
+            }).join('');
+
+            return s;
+        }
+
+        function appendMsg(content, who, opts) {
+            const div = document.createElement('div');
+            div.className = 'qnu-msg ' + (who === 'user' ? 'user' : 'bot');
+            const bub = document.createElement('div');
+            bub.className = 'bubble';
+            if (opts && opts.raw) {
+                bub.innerHTML = content;
+            } else if (who === 'user') {
+                bub.textContent = content;
+            } else {
+                bub.innerHTML = md(content);
+            }
+            if (opts && opts.tools && opts.tools.length) {
+                const tag = document.createElement('div');
+                tag.className = 'qnu-tools-tag';
+                tag.textContent = 'Đã tra: ' + opts.tools.join(', ');
+                bub.appendChild(tag);
+            }
+            div.appendChild(bub);
+            body.appendChild(div);
+            body.scrollTop = body.scrollHeight;
+            return div;
+        }
+
+        async function ask(text) {
+            if (!text || !text.trim()) return;
+            const q = text.trim();
+            appendMsg(q, 'user');
+            input.value = '';
+            sendBtn.disabled = true;
+
+            const typing = appendMsg('<i class="fas fa-spinner fa-spin mr-1"></i>Đang nghĩ...', 'bot', { raw: true });
+
+            try {
+                const res = await fetch('/ChatBot/Ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify({ Message: q, History: history })
+                });
+                const data = await res.json();
+                typing.remove();
+                const reply = data.reply || 'Không có phản hồi.';
+                appendMsg(reply, 'bot', { tools: data.toolsUsed });
+
+                // Lưu vào history (chỉ giữ 10 turn gần nhất)
+                history.push({ Role: 'user', Text: q });
+                history.push({ Role: 'model', Text: reply });
+                if (history.length > 20) history = history.slice(-20);
+            } catch (e) {
+                typing.remove();
+                appendMsg('Lỗi kết nối: ' + e.message, 'bot');
+            } finally {
+                sendBtn.disabled = false;
+                input.focus();
+            }
+        }
+
+        sendBtn.addEventListener('click', () => ask(input.value));
+        input.addEventListener('keydown', e => {
+            if (e.key === 'Enter') { e.preventDefault(); ask(input.value); }
+        });
+
+        quick.addEventListener('click', e => {
+            const btn = e.target.closest('button[data-q]');
+            if (!btn) return;
+            ask(btn.getAttribute('data-q'));
+        });
+    })();
+</script>

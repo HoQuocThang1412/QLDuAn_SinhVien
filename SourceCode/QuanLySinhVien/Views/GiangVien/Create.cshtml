@@ -1,0 +1,103 @@
+﻿@model QuanLySinhVien.Models.GiangVien
+@{
+    ViewData["Title"] = "Thêm giảng viên mới";
+}
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-chalkboard-teacher mr-2"></i> Thêm giảng viên mới
+        </h3>
+    </div>
+
+    <form method="post" action="/GiangVien/Create">
+        @Html.AntiForgeryToken()
+        <div class="card-body">
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle mr-1"></i>
+                    <strong>Vui lòng kiểm tra lại:</strong>
+                    <ul class="mb-0 mt-1">
+                        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                        {
+                            <li>@error.ErrorMessage</li>
+                        }
+                    </ul>
+                </div>
+            }
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Mã giảng viên <span class="text-danger">*</span></label>
+                        <input type="text" name="MaGv" value="@Model?.MaGv"
+                               class="form-control" placeholder="VD: GV001"
+                               maxlength="10" required>
+                        <small class="text-muted">Tối đa 10 ký tự, không thể thay đổi sau khi lưu.</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Họ và tên <span class="text-danger">*</span></label>
+                        <input type="text" name="HoTen" value="@Model?.HoTen"
+                               class="form-control" placeholder="Nhập họ tên đầy đủ" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Học vị</label>
+                        <select name="HocVi" class="form-control">
+                            <option value="">-- Chọn học vị --</option>
+                            @foreach (var hv in new[] { "Cử nhân", "Thạc sĩ", "Tiến sĩ", "Phó Giáo sư", "Giáo sư" })
+                            {
+                                <option value="@hv">@hv</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Khoa <span class="text-danger">*</span></label>
+                        <select name="MaKhoa" id="selKhoa" class="form-control" required
+                                onchange="khoaChanged(this)">
+                            <option value="">-- Chọn khoa --</option>
+                            @foreach (var khoa in ViewBag.DanhSachKhoa)
+                            {
+                                <option value="@khoa.MaKhoa">@khoa.TenKhoa</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Chuyên ngành SP -->
+                    <div class="form-group" id="divChuyenNganh" style="display:none;">
+                        <label>Chuyên ngành Sư phạm <span class="text-danger">*</span></label>
+                        <select id="selChuyenNganh" class="form-control"
+                                onchange="chuyenNganhChanged(this)">
+                            <option value="">-- Chọn chuyên ngành --</option>
+                        </select>
+                        <small class="text-muted">Chọn môn giảng viên phụ trách.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" name="Email" value="@Model?.Email"
+                               class="form-control" placeholder="example@qnu.edu.vn">
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info py-2">
+                <i class="fas fa-info-circle mr-1"></i>
+                Các trường có dấu <span class="text-danger">*</span> là bắt buộc.
+            </div>
+        </div>
+
+        <div class="card-footer">
+            <button type="submit" class="btn btn-success">
+                <i class="fas fa-save mr-1"></i> Lưu giảng viên
+            </button>
+            <a href="/GiangVien/Index" class="btn btn-default ml-2">
+                <i class="fas fa-arrow-left mr-1"></i> Quay lại
+            </a>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,218 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quên mật khẩu — Quản lý Sinh viên QNU</title>
+    <link rel="stylesheet" href="~/adminlte/plugins/fontawesome-free/css/all.min.css">
+    <link rel="stylesheet" href="~/adminlte/dist/css/adminlte.min.css">
+    <style>
+            body {
+                background: #f4f6f9;
+                margin: 0;
+                font-family: 'Segoe UI', sans-serif;
+            }
+
+            .login-page {
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .login-wrapper {
+                display: flex;
+                width: 900px;
+                min-height: 580px;
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+            }
+
+            .login-left {
+                flex: 1;
+                background: url('/images/bg_truong.jpg') center/cover no-repeat;
+            }
+
+            .login-right {
+                width: 380px;
+                background: #f0f2f5;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 40px 36px;
+            }
+
+            .login-school {
+                font-size: 13px;
+                font-weight: 700;
+                color: #1a3a6c;
+                text-transform: uppercase;
+                margin-bottom: 4px;
+                text-align: center;
+            }
+
+            .login-title {
+                font-size: 20px;
+                font-weight: 800;
+                color: #c8102e;
+                text-transform: uppercase;
+                margin-bottom: 20px;
+                text-align: center;
+            }
+
+            .form-card {
+                width: 100%;
+                background: #fff;
+                border-radius: 10px;
+                padding: 24px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            }
+
+                .form-card h5 {
+                    color: #c8102e;
+                    font-weight: 700;
+                    font-size: 18px;
+                    margin-bottom: 2px;
+                }
+
+                .form-card p {
+                    color: #6c757d;
+                    font-size: 12px;
+                    margin-bottom: 14px;
+                }
+
+            .input-group-text {
+                background: #eaf2fb !important;
+                border-color: #b8cce4 !important;
+            }
+
+            .form-control {
+                background: #eaf2fb !important;
+                border-color: #b8cce4 !important;
+            }
+
+            .btn-submit {
+                background: #1a3a6c;
+                color: #fff;
+                width: 100%;
+                padding: 10px;
+                font-weight: 600;
+                border: none;
+                border-radius: 6px;
+                font-size: 15px;
+            }
+
+                .btn-submit:hover {
+                    background: #0d2248;
+                }
+
+            .hint-box {
+                background: #e8f4fd;
+                border: 1px solid #b8d4ea;
+                border-radius: 6px;
+                padding: 10px 14px;
+                margin-bottom: 14px;
+                font-size: 12px;
+                color: #1a5276;
+            }
+
+            .back-link {
+                display: block;
+                text-align: center;
+                margin-top: 12px;
+                font-size: 13px;
+                color: #6c757d;
+            }
+    </style>
+</head>
+<body>
+    <div class="login-page">
+        <div class="login-wrapper">
+
+            <div class="login-left"></div>
+
+            <div class="login-right">
+                <div class="login-school">Trường Đại học Quy Nhơn</div>
+                <div class="login-title">Quản lý Sinh viên QNU</div>
+
+                <div class="form-card">
+                    <h5><i class="fas fa-key mr-1"></i> Quên mật khẩu</h5>
+                    <p>Đặt lại mật khẩu tài khoản của bạn</p>
+
+                    @if (ViewBag.Error != null)
+                    {
+                        <div class="alert alert-danger py-2 mb-3">
+                            <i class="fas fa-exclamation-circle mr-1"></i> @ViewBag.Error
+                        </div>
+                    }
+
+                    <div class="hint-box">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        <strong>Mã xác nhận:</strong>
+                        <ul class="mb-0 mt-1 pl-3">
+                            <li>Sinh viên → <strong>MSSV</strong> (VD: 4351050...)</li>
+                            <li>Giảng viên → <strong>Mã GV</strong> (VD: GV001)</li>
+                            <li>Admin/Cán bộ → <strong>Tên IN HOA</strong> (VD: ADMIN)</li>
+                        </ul>
+                    </div>
+
+                    <form method="post" action="/TaiKhoan/QuenMatKhau" autocomplete="off">
+                        @Html.AntiForgeryToken()
+
+                        <div class="input-group mb-2">
+                            <input type="text" name="tenDangNhap"
+                                   class="form-control" placeholder="Tên đăng nhập"
+                                   autocomplete="off" required>
+                            <div class="input-group-append">
+                                <div class="input-group-text"><i class="fas fa-user"></i></div>
+                            </div>
+                        </div>
+
+                        <div class="input-group mb-2">
+                            <input type="text" name="maSoXacNhan"
+                                   class="form-control" placeholder="Mã xác nhận"
+                                   autocomplete="off" required>
+                            <div class="input-group-append">
+                                <div class="input-group-text"><i class="fas fa-id-card"></i></div>
+                            </div>
+                        </div>
+
+                        <div class="input-group mb-2">
+                            <input type="password" name="matKhauMoi"
+                                   class="form-control" placeholder="Mật khẩu mới (≥ 6 ký tự)"
+                                   autocomplete="new-password" required minlength="6">
+                            <div class="input-group-append">
+                                <div class="input-group-text"><i class="fas fa-lock"></i></div>
+                            </div>
+                        </div>
+
+                        <div class="input-group mb-3">
+                            <input type="password" name="xacNhanMatKhau"
+                                   class="form-control" placeholder="Xác nhận mật khẩu mới"
+                                   autocomplete="new-password" required minlength="6">
+                            <div class="input-group-append">
+                                <div class="input-group-text"><i class="fas fa-lock"></i></div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-submit">
+                            <i class="fas fa-save mr-1"></i> Đặt lại mật khẩu
+                        </button>
+                    </form>
+
+                    <a href="/TaiKhoan/DangNhap" class="back-link">
+                        <i class="fas fa-arrow-left mr-1"></i> Quay lại đăng nhập
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="~/adminlte/plugins/jquery/jquery.min.js"></script>
+    <script src="~/adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

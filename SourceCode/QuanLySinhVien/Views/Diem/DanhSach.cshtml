@@ -1,0 +1,167 @@
+﻿@model List<QuanLySinhVien.Models.DangKyHoc>
+@{
+    ViewData["Title"] = "Xem bảng điểm học phần";
+    string maHocKy = ViewBag.MaHocKy;
+    string maLhp = ViewBag.MaLhp;
+}
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-theme/0.1.0-beta.10/select2-bootstrap.min.css" rel="stylesheet" />
+
+<style>
+    .table-head-fixed th {
+        background-color: #f8f9fa !important;
+        box-shadow: inset 0 -1px 0 #dee2e6;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+</style>
+
+<div class="card card-outline card-info mb-4">
+    <div class="card-header">
+        <h3 class="card-title font-weight-bold"><i class="fas fa-search mr-1"></i> TRA CỨU BẢNG ĐIỂM</h3>
+    </div>
+    <div class="card-body pb-0">
+        <form method="get" action="/Diem/DanhSach">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label>Chọn Học kỳ:</label>
+                    <select name="maHocKy" class="form-control select2" onchange="this.form.submit()">
+                        <option value="">-- Click để chọn học kỳ --</option>
+                        @if (ViewBag.DanhSachHK != null)
+                        {
+                            foreach (var hk in ViewBag.DanhSachHK)
+                            {
+                                <option value="@hk.MaHocKy" selected="@(ViewBag.MaHocKy == hk.MaHocKy ? "selected" : null)">@hk.TenHocKy</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label>Chọn Lớp Học Phần:</label>
+                    <select name="maLhp" class="form-control select2" onchange="this.form.submit()">
+                        <option value="">-- Click để chọn Lớp đang dạy --</option>
+                        @if (ViewBag.DanhSachLhp != null)
+                        {
+                            foreach (var lhp in ViewBag.DanhSachLhp)
+                            {
+                                <option value="@lhp.Value" selected="@(ViewBag.MaLhp == lhp.Value ? "selected" : null)">@lhp.Text</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-2 text-right mt-4 pt-1">
+                    <a href="/Diem/DanhSach" class="btn btn-default w-100"><i class="fas fa-sync"></i> Bỏ chọn</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card mt-3">
+    <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+        <h3 class="card-title mb-0">
+            <i class="fas fa-list-alt mr-1"></i>
+            Bảng điểm môn <strong>@(ViewBag.TenMon ?? "Đang chọn...")</strong> - LHP: <strong>@maLhp</strong>
+        </h3>
+        
+        @if (Model != null && Model.Any())
+        {
+            <a href="/Diem/XuatExcel?maHocKy=@maHocKy&maLhp=@maLhp" class="btn btn-sm btn-success font-weight-bold" title="Tải bảng điểm về máy">
+                <i class="fas fa-file-excel mr-1"></i> Xuất Excel
+            </a>
+        }
+    </div>
+    
+    <div class="card-body p-0">
+        @if (string.IsNullOrEmpty(maHocKy) || string.IsNullOrEmpty(maLhp))
+        {
+            <div class="text-center py-5">
+                <i class="fas fa-hand-point-up fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Vui lòng chọn Học kỳ và Lớp học phần ở trên để hiển thị bảng điểm.</h5>
+            </div>
+        }
+        else if (Model == null || !Model.Any())
+        {
+            <div class="text-center py-5">
+                <i class="fas fa-user-slash fa-3x text-warning mb-3"></i>
+                <h5 class="text-danger">Lớp này chưa có sinh viên nào đăng ký môn này.</h5>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                <table class="table table-bordered table-striped table-hover text-center table-head-fixed mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th style="width: 50px">STT</th>
+                            <th style="width: 120px">MSSV</th>
+                            <th class="text-left">Họ và Tên</th>
+                            <th style="width: 120px">Lớp SH</th>
+                            <th style="width: 100px">Điểm QT</th>
+                            <th style="width: 100px">Điểm Thi</th>
+                            <th style="width: 100px">Tổng Kết</th>
+                            <th style="width: 120px">Xếp Loại</th>
+                            <th style="width: 120px">Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < Model.Count; i++)
+                        {
+                            var kq = Model[i].KetQuaHocTap;
+                            
+                            <tr>
+                                <td class="align-middle">@(i + 1)</td>
+                                <td class="font-weight-bold text-primary align-middle">@Model[i].Mssv</td>
+                                <td class="text-left align-middle">@Model[i].MssvNavigation?.HoTen</td>
+                                <td class="align-middle">@Model[i].MssvNavigation?.MaLop</td>
+                                
+                                <td class="align-middle font-weight-bold text-info">@(kq?.DiemQt?.ToString("0.0") ?? "-")</td>
+                                <td class="align-middle font-weight-bold text-danger">@(kq?.DiemThi?.ToString("0.0") ?? "-")</td>
+                                <td class="font-weight-bold align-middle h5">@(kq?.DiemTongKet?.ToString("0.0") ?? "-")</td>
+                                
+                                <td class="align-middle">
+                                    @if (kq != null && !string.IsNullOrEmpty(kq.XepLoai))
+                                    {
+                                        <span class="badge @(kq.XepLoai == "Kém" || kq.XepLoai == "Yếu" ? "badge-danger" : "badge-info") py-2 w-100">
+                                            @kq.XepLoai
+                                        </span>
+                                    }
+                                </td>
+                                <td class="align-middle">
+                                    @if (kq != null)
+                                    {
+                                        if (kq.QuaMon == true)
+                                        {
+                                            <span class="text-success font-weight-bold"><i class="fas fa-check-circle"></i> Đạt</span>
+                                        }
+                                        else if (kq.DiemTongKet != null)
+                                        {
+                                            <span class="text-danger font-weight-bold"><i class="fas fa-times-circle"></i> Rớt</span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted font-italic">Chưa nhập</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function () {
+        $('.select2').select2({ theme: "bootstrap", width: '100%' });
+        });
+    </script>
+}

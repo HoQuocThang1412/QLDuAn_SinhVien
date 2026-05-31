@@ -1,0 +1,68 @@
+﻿@model QuanLySinhVien.Models.CauHinhQR
+@{
+    ViewData["Title"] = "Cấu hình tài khoản nhận tiền";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card card-outline card-primary shadow-sm">
+            <div class="card-header">
+                <h3 class="card-title font-weight-bold text-primary">
+                    <i class="fas fa-university mr-2"></i> THÔNG TIN TÀI KHOẢN NHẬN HỌC PHÍ
+                </h3>
+            </div>
+            <form asp-action="LuuCaiDatQR" method="post">
+                @Html.AntiForgeryToken()
+                <div class="card-body">
+                    <p class="text-muted mb-4 small italic text-center">
+                        <i class="fas fa-info-circle mr-1"></i> Thông tin này sẽ được dùng để tạo mã VietQR tự động cho sinh viên thanh toán.
+                    </p>
+
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label class="font-weight-bold">Ngân hàng:</label>
+                            <select name="MaNganHang" id="selNganHang" class="form-control" required>
+                                <option value="">-- Chọn ngân hàng --</option>
+                                @foreach (var nh in ViewBag.DSNganHang)
+                                {
+                                    <option value="@nh.Ma" selected="@(Model?.MaNganHang == nh.Ma)">@nh.Ten</option>
+                                }
+                            </select>
+                            <input type="hidden" name="TenNganHang" id="txtTenNganHang" value="@Model?.TenNganHang" />
+                        </div>
+
+                        <div class="col-md-6 form-group">
+                            <label class="font-weight-bold">Số tài khoản (STK):</label>
+                            <input type="text" name="SoTaiKhoan" class="form-control" value="@Model?.SoTaiKhoan" placeholder="Nhập STK nhận tiền..." required />
+                        </div>
+
+                        <div class="col-md-12 form-group">
+                            <label class="font-weight-bold">Tên chủ tài khoản (In hoa không dấu):</label>
+                            <input type="text" name="TenChuTaiKhoan" class="form-control text-uppercase" value="@Model?.TenChuTaiKhoan" placeholder="Ví dụ: HO QUOC THANG" required />
+                        </div>
+                    </div>
+
+                    <div class="callout callout-info bg-light mt-3">
+                        <h5><i class="fas fa-qrcode mr-2"></i> Xem trước mã QR</h5>
+                        <p class="small">Sau khi lưu, sếp có thể đăng nhập bằng tài khoản SV để kiểm tra hiển thị QR.</p>
+                    </div>
+                </div>
+                <div class="card-footer text-right bg-white">
+                    <button type="submit" class="btn btn-primary px-5 font-weight-bold shadow">
+                        <i class="fas fa-save mr-1"></i> LƯU CẤU HÌNH
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Tự động lấy tên ngân hàng khi chọn mã
+        $('#selNganHang').change(function() {
+            var selectedText = $(this).find("option:selected").text();
+            $('#txtTenNganHang').val(selectedText);
+        });
+    </script>
+}

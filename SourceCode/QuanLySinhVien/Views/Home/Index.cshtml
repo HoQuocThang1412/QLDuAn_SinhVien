@@ -1,0 +1,218 @@
+﻿@{
+    ViewData["Title"] = "Trang chủ";
+}
+
+@using Microsoft.EntityFrameworkCore
+@inject QuanLySinhVien.Models.QuanLySinhVienContext _db
+
+@{
+    var tongSV = await _db.SinhViens.CountAsync();
+    var tongGV = await _db.GiangViens.CountAsync();
+    var tongLop = await _db.LopHocs.CountAsync();
+    var tongMon = await _db.MonHocs.CountAsync();
+    var hocKyHT = await _db.HocKies.FirstOrDefaultAsync(h => h.TrangThai == "Đang diễn ra");
+
+    var thongKeKhoa = await _db.Khoas
+        .Select(k => new
+        {
+            k.MaKhoa,
+            k.TenKhoa,
+            SoSV = _db.SinhViens.Count(s => s.MaLopNavigation.MaKhoa == k.MaKhoa),
+            SoGV = _db.GiangViens.Count(g => g.MaKhoa == k.MaKhoa),
+            SoLop = _db.LopHocs.Count(l => l.MaKhoa == k.MaKhoa),
+            SoMon = _db.MonHocs.Count(m => m.MaKhoa == k.MaKhoa),
+            SvDangHoc = _db.SinhViens.Count(s => s.MaLopNavigation.MaKhoa == k.MaKhoa
+                                              && s.TrangThai == "Đang học"),
+        })
+        .ToListAsync();
+}
+
+<!-- ── 4 Metric Cards ── -->
+<div class="row">
+    <div class="col-lg-3 col-md-6">
+        <div class="small-box bg-info">
+            <div class="inner"><h3>@tongSV</h3><p>Tổng sinh viên</p></div>
+            <div class="icon"><i class="fas fa-user-graduate"></i></div>
+            <a href="/SinhVien/Index" class="small-box-footer">
+                Xem chi tiết <i class="fas fa-arrow-circle-right"></i>
+            </a>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="small-box bg-success">
+            <div class="inner"><h3>@tongGV</h3><p>Tổng giảng viên</p></div>
+            <div class="icon"><i class="fas fa-chalkboard-teacher"></i></div>
+            <a href="/GiangVien/Index" class="small-box-footer">
+                Xem chi tiết <i class="fas fa-arrow-circle-right"></i>
+            </a>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="small-box bg-warning">
+            <div class="inner"><h3>@tongLop</h3><p>Tổng lớp học</p></div>
+            <div class="icon"><i class="fas fa-chalkboard"></i></div>
+            <a href="/LopHoc/Index" class="small-box-footer">
+                Xem chi tiết <i class="fas fa-arrow-circle-right"></i>
+            </a>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="small-box bg-danger">
+            <div class="inner"><h3>@tongMon</h3><p>Tổng môn học</p></div>
+            <div class="icon"><i class="fas fa-book"></i></div>
+            <a href="/MonHoc/Index" class="small-box-footer">
+                Xem chi tiết <i class="fas fa-arrow-circle-right"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- ── Học kỳ hiện tại ── -->
+@if (hocKyHT != null)
+{
+    <div class="alert alert-success alert-dismissible">
+        <button type="button" class="close" data-dismiss="alert">×</button>
+        <i class="fas fa-calendar-check mr-2"></i>
+        <strong>Học kỳ đang diễn ra:</strong> @hocKyHT.TenHocKy
+        — Từ <strong>@hocKyHT.NgayBatDau.ToString("dd/MM/yyyy")</strong>
+        đến <strong>@hocKyHT.NgayKetThuc.ToString("dd/MM/yyyy")</strong>
+    </div>
+}
+else
+{
+    <div class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle mr-2"></i>
+        Chưa có học kỳ nào đang diễn ra.
+        <a href="/HocKy/Create" class="btn btn-sm btn-warning ml-2">Thêm học kỳ</a>
+    </div>
+}
+
+<!-- ── Thống kê theo Khoa — Accordion ── -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-university mr-2"></i> Thống kê theo Khoa
+        </h3>
+        <div class="card-tools">
+            <small class="text-muted">Nhấn vào khoa để xem chi tiết</small>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="accordion" id="accordionKhoa">
+            @for (int i = 0; i < thongKeKhoa.Count; i++)
+            {
+                var khoa = thongKeKhoa[i];
+                string cId = $"collapse{i}";
+                string hId = $"heading{i}";
+                int phanTram = khoa.SoSV > 0
+                ? (int)Math.Round((double)khoa.SvDangHoc / khoa.SoSV * 100)
+                : 0;
+
+                // Màu badge theo tỷ lệ
+                string badgeColor = phanTram >= 90 ? "badge-success"
+                : phanTram >= 70 ? "badge-warning"
+                : "badge-danger";
+
+                <div class="border-bottom">
+                    <!-- Header khoa -->
+                    <div id="@hId">
+                        <button class="btn btn-link btn-block text-left px-4 py-3 collapsed"
+                                type="button"
+                                data-toggle="collapse"
+                                data-target="#@cId"
+                                aria-expanded="false"
+                                style="text-decoration:none;color:#212529;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>
+                                    <i class="fas fa-building text-primary mr-2"></i>
+                                    <strong>@khoa.TenKhoa</strong>
+                                </span>
+                                <span class="d-flex align-items-center">
+                                    <span class="badge badge-light border mr-1">
+                                        @khoa.SoSV SV
+                                    </span>
+                                    <span class="badge badge-light border mr-1">
+                                        @khoa.SoGV GV
+                                    </span>
+                                    <span class="badge badge-light border mr-1">
+                                        @khoa.SoLop Lớp
+                                    </span>
+                                    <span class="badge @badgeColor ml-2">
+                                        @phanTram% đang học
+                                    </span>
+                                    <i class="fas fa-chevron-down text-muted ml-3"></i>
+                                </span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <!-- Nội dung khoa -->
+                    <div id="@cId" class="collapse"
+                         aria-labelledby="@hId"
+                         data-parent="#accordionKhoa">
+                        <div class="px-4 py-3 bg-light">
+                            <div class="row">
+                                <div class="col-md-5">
+                                    <table class="table table-sm table-borderless mb-0">
+                                        <tbody>
+                                            <tr>
+                                                <td class="text-muted pl-0" style="width:150px">
+                                                    <i class="fas fa-user-graduate mr-1"></i> Sinh viên
+                                                </td>
+                                                <td><strong>@khoa.SoSV</strong></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-muted pl-0">
+                                                    <i class="fas fa-chalkboard-teacher mr-1"></i> Giảng viên
+                                                </td>
+                                                <td><strong>@khoa.SoGV</strong></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-muted pl-0">
+                                                    <i class="fas fa-chalkboard mr-1"></i> Lớp học
+                                                </td>
+                                                <td><strong>@khoa.SoLop</strong></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-muted pl-0">
+                                                    <i class="fas fa-book mr-1"></i> Môn học
+                                                </td>
+                                                <td><strong>@khoa.SoMon</strong></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="col-md-4">
+                                    <p class="text-muted mb-1">
+                                        <small>Tỷ lệ đang học</small>
+                                    </p>
+                                    <div class="progress mb-1" style="height:10px;">
+                                        <div class="progress-bar bg-success"
+                                             style="width:@phanTram%"></div>
+                                    </div>
+                                    <small class="text-success">
+                                        <strong>@khoa.SvDangHoc</strong> đang học
+                                        / @khoa.SoSV tổng
+                                        <span class="badge @badgeColor ml-1">@phanTram%</span>
+                                    </small>
+                                </div>
+                                <div class="col-md-3 d-flex align-items-center">
+                                    <div>
+                                        <a href="/SinhVien/Index?maLop=&maKhoa=@khoa.MaKhoa"
+                                           class="btn btn-sm btn-outline-primary btn-block mb-1">
+                                            <i class="fas fa-users mr-1"></i> Xem sinh viên
+                                        </a>
+                                        <a href="/LopHoc/Index?maKhoa=@khoa.MaKhoa"
+                                           class="btn btn-sm btn-outline-secondary btn-block">
+                                            <i class="fas fa-chalkboard mr-1"></i> Xem lớp học
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

@@ -1,0 +1,179 @@
+﻿@model QuanLySinhVien.Models.MonHoc
+@{
+    ViewData["Title"] = "Thêm môn học mới";
+}
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-book mr-2"></i> Thêm môn học mới
+        </h3>
+    </div>
+
+    <form method="post" action="/MonHoc/Create">
+        @Html.AntiForgeryToken()
+        <div class="card-body">
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle mr-1"></i>
+                    <strong>Vui lòng kiểm tra lại:</strong>
+                    <ul class="mb-0 mt-1">
+                        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                        {
+                            <li>@error.ErrorMessage</li>
+                        }
+                    </ul>
+                </div>
+            }
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Mã môn <span class="text-danger">*</span></label>
+                        <input type="text" name="MaMon" value="@Model?.MaMon"
+                               class="form-control" placeholder="VD: CNTT301"
+                               maxlength="10" required>
+                        <small class="text-muted">Tối đa 10 ký tự.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tên môn học <span class="text-danger">*</span></label>
+                        <input type="text" name="TenMon" value="@Model?.TenMon"
+                               class="form-control" placeholder="VD: Lập trình Web" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Khoa <span class="text-danger">*</span></label>
+                        <select name="MaKhoa" id="selKhoa" class="form-control" required
+                                onchange="khoaChanged(this)">
+                            <option value="">-- Chọn khoa --</option>
+                            @if (ViewBag.DanhSachKhoa != null)
+                            {
+                                foreach (var khoa in ViewBag.DanhSachKhoa)
+                                {
+                                    <option value="@khoa.MaKhoa" selected="@(Model?.MaKhoa == khoa.MaKhoa ? "selected" : null)">
+                                        @khoa.TenKhoa
+                                    </option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="divChuyenNganh" style="display:none;">
+                        <label>Chuyên ngành Sư phạm <span class="text-danger">*</span></label>
+                        <select id="selChuyenNganh" class="form-control"
+                                onchange="chuyenNganhChanged(this)">
+                            <option value="">-- Chọn chuyên ngành --</option>
+                        </select>
+                        <small class="text-muted">Môn học thuộc chuyên ngành nào.</small>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Số tín chỉ <span class="text-danger">*</span></label>
+                        <select name="SoTinChi" class="form-control" required>
+                            @foreach (var tc in new[] { 1, 2, 3, 4, 5 })
+                            {
+                                <option value="@tc" selected="@(Model?.SoTinChi == tc ? "selected" : null)">
+                                    @tc tín chỉ
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tỷ lệ điểm (Quá trình - Cuối kỳ) <span class="text-danger">*</span></label>
+                        <select id="chonHeSo" class="form-control" onchange="doiHeSo()" required>
+                            <option value="0.4-0.6" selected="@((Model == null || Model.HeSoQt == 0.4m) ? "selected" : null)">
+                                Quá trình 40% - Điểm thi 60%
+                            </option>
+                            <option value="0.3-0.7" selected="@(Model?.HeSoQt == 0.3m ? "selected" : null)">
+                                Quá trình 30% - Điểm thi 70%
+                            </option>
+                            <option value="0.5-0.5" selected="@(Model?.HeSoQt == 0.5m ? "selected" : null)">
+                                Quá trình 50% - Điểm thi 50%
+                            </option>
+                        </select>
+
+                        <input type="hidden" id="HeSoQt" name="HeSoQt" value="@(Model?.HeSoQt ?? 0.4m)" />
+                        <input type="hidden" id="HeSoCk" name="HeSoCk" value="@(Model?.HeSoCk ?? 0.6m)" />
+                    </div>
+
+                    <div class="form-group mt-4">
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox"
+                                   class="custom-control-input"
+                                   id="IsDieuKien"
+                                   name="IsDieuKien"
+                                   value="true"
+                            @(Model?.IsDieuKien == true ? "checked" : "")>
+                            <input type="hidden" name="IsDieuKien" value="false" />
+                            <label class="custom-control-label font-weight-bold text-danger" for="IsDieuKien">
+                                Đây là môn điều kiện / môn tiên quyết, không tính GPA
+                            </label>
+                        </div>
+                        <small class="text-muted">
+                            Môn được tích sẽ có dấu <strong>*</strong> trong bảng điểm, không tính vào GPA hệ 4.
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info py-2">
+                <i class="fas fa-info-circle mr-1"></i>
+                Công thức tính điểm:
+                <strong>DiemTongKet = ROUND((DiemQT × HsQT) + (DiemThi × HsCK), 1)</strong>
+                — Qua môn khi TK ≥ 4.0 VÀ DiemThi ≥ 1.0.
+                <br />
+                <strong class="text-danger">(*)</strong> Môn điều kiện / môn tiên quyết sẽ không tính vào GPA hệ 4.
+            </div>
+        </div>
+
+        <div class="card-footer">
+            <button type="submit" class="btn btn-success">
+                <i class="fas fa-save mr-1"></i> Lưu môn học
+            </button>
+            <a href="/MonHoc/Index" class="btn btn-default ml-2">
+                <i class="fas fa-arrow-left mr-1"></i> Quay lại
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        function khoaChanged(sel) {
+            var divCN = document.getElementById('divChuyenNganh');
+            var selCN = document.getElementById('selChuyenNganh');
+
+            if (divCN) {
+                if (sel.value === 'SP') {
+                    divCN.style.display = 'block';
+                } else {
+                    divCN.style.display = 'none';
+                    if (selCN) selCN.value = '';
+                }
+            }
+        }
+
+        function chuyenNganhChanged(sel) {
+            // Giữ lại hook để không phá logic giao diện cũ.
+        }
+
+        function doiHeSo() {
+            var tyLe = document.getElementById('chonHeSo').value.split('-');
+            document.getElementById('HeSoQt').value = tyLe[0];
+            document.getElementById('HeSoCk').value = tyLe[1];
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            doiHeSo();
+
+            var selKhoa = document.getElementById('selKhoa');
+            if (selKhoa) khoaChanged(selKhoa);
+        });
+    </script>
+}

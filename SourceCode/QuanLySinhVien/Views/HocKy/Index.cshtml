@@ -1,0 +1,114 @@
+﻿@model IEnumerable<QuanLySinhVien.Models.HocKy>
+@{
+    ViewData["Title"] = "Danh sách học kỳ";
+}
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="card-title mb-0">
+            <i class="fas fa-calendar-alt mr-2"></i> Danh sách học kỳ
+        </h3>
+        <a href="/HocKy/Create" class="btn btn-success btn-sm">
+            <i class="fas fa-plus mr-1"></i> Thêm học kỳ
+        </a>
+    </div>
+
+    <div class="card-body p-0">
+        <table class="table table-bordered table-striped table-hover mb-0">
+            <thead class="thead-dark">
+                <tr>
+                    <th style="width:140px">Mã học kỳ</th>
+                    <th>Tên học kỳ</th>
+                    <th style="width:130px" class="text-center">Ngày bắt đầu</th>
+                    <th style="width:130px" class="text-center">Ngày kết thúc</th>
+                    <th style="width:130px" class="text-center">Trạng thái</th>
+                    <th style="width:160px" class="text-center">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                            Chưa có học kỳ nào.
+                        </td>
+                    </tr>
+                }
+                @foreach (var hk in Model)
+                {
+                    <tr>
+                        <td><code>@hk.MaHocKy</code></td>
+                        <td>@hk.TenHocKy</td>
+                        <td class="text-center">@hk.NgayBatDau.ToString("dd/MM/yyyy")</td>
+                        <td class="text-center">@hk.NgayKetThuc.ToString("dd/MM/yyyy")</td>
+                        <td class="text-center">
+                            @{
+                                string badge = hk.TrangThai switch
+                                {
+                                    "Đang diễn ra" => "badge-success",
+                                    "Sắp diễn ra" => "badge-info",
+                                    "Đã kết thúc" => "badge-secondary",
+                                    _ => "badge-secondary"
+                                };
+                            }
+                            <span class="badge @badge">@hk.TrangThai</span>
+                        </td>
+                        <td class="text-center" style="white-space:nowrap;">
+                            <a href="/HocKy/Edit/@hk.MaHocKy"
+                               class="btn btn-warning btn-sm" title="Sửa">
+                                <i class="fas fa-edit"></i>
+                            </a>
+
+                            @* Nút đổi trạng thái *@
+                            @if (hk.TrangThai != "Đang diễn ra")
+                            {
+                                <form method="post" action="/HocKy/DoiTrangThai"
+                                      style="display:inline-block">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@hk.MaHocKy">
+                                    <input type="hidden" name="trangThai" value="Đang diễn ra">
+                                    <button type="submit" class="btn btn-success btn-sm"
+                                            title="Đặt đang diễn ra">
+                                        <i class="fas fa-play"></i>
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <form method="post" action="/HocKy/DoiTrangThai"
+                                      style="display:inline-block">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@hk.MaHocKy">
+                                    <input type="hidden" name="trangThai" value="Đã kết thúc">
+                                    <button type="submit" class="btn btn-secondary btn-sm"
+                                            title="Đặt đã kết thúc">
+                                        <i class="fas fa-stop"></i>
+                                    </button>
+                                </form>
+                            }
+
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <form method="post" action="/HocKy/Delete/@hk.MaHocKy"
+                                      style="display:inline-block"
+                                      onsubmit="return confirm('Xoá học kỳ @hk.TenHocKy?')">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-danger btn-sm" title="Xoá">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card-footer">
+        <small class="text-muted">
+            Tổng: <strong>@Model.Count()</strong> học kỳ
+        </small>
+    </div>
+</div>

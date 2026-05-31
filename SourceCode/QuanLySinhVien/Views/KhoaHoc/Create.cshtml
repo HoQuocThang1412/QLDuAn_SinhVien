@@ -1,0 +1,40 @@
+﻿@model QuanLySinhVien.Models.KhoaHoc
+@{
+    ViewData["Title"] = "Thêm Khóa học";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card card-outline card-success shadow-sm">
+            <div class="card-header">
+                <h3 class="card-title font-weight-bold">Thêm Khóa học mới</h3>
+            </div>
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <div class="card-body">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Mã Khóa *</label>
+                        <input asp-for="MaKhoaHoc" class="form-control"
+                               placeholder="VD: K49" required maxlength="20" />
+                        <span asp-validation-for="MaKhoaHoc" class="text-danger small"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Tên Khóa *</label>
+                        <input asp-for="TenKhoaHoc" class="form-control"
+                               placeholder="VD: Khóa 49" required />
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Năm bắt đầu</label>
+                        <input asp-for="NamBatDau" type="number" class="form-control"
+                               placeholder="VD: 2026" />
+                    </div>
+                </div>
+                <div class="card-footer text-right bg-white">
+                    <a href="/KhoaHoc/Index" class="btn btn-default mr-2">Quay lại</a>
+                    <button type="submit" class="btn btn-success">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

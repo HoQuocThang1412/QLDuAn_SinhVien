@@ -1,0 +1,37 @@
+﻿@model QuanLySinhVien.Models.KhoaHoc
+@{
+    ViewData["Title"] = "Sửa Khóa học";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card card-outline card-warning shadow-sm">
+            <div class="card-header">
+                <h3 class="card-title font-weight-bold">Cập nhật Khóa học</h3>
+            </div>
+            <form asp-action="Edit" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+                <div class="card-body">
+                    <div class="form-group">
+                        <label class="font-weight-bold">Mã Khóa</label>
+                        <input asp-for="MaKhoaHoc" class="form-control" readonly
+                               style="background:#e9ecef" />
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Tên Khóa *</label>
+                        <input asp-for="TenKhoaHoc" class="form-control" required />
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Năm bắt đầu</label>
+                        <input asp-for="NamBatDau" type="number" class="form-control" />
+                    </div>
+                </div>
+                <div class="card-footer text-right bg-white">
+                    <a href="/KhoaHoc/Index" class="btn btn-default mr-2">Quay lại</a>
+                    <button type="submit" class="btn btn-warning font-weight-bold">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,667 @@
+﻿@using QuanLySinhVien.Controllers
+@using QuanLySinhVien.Models
+
+@{
+    ViewData["Title"] = "Thống kê tổng quan";
+
+    var topSinhVien = ViewBag.TopSinhVien as List<KetQuaHocTap> ?? new List<KetQuaHocTap>();
+
+    var thongKeGiangVien = ViewBag.ThongKeGiangVien as List<ThongKeGiangVienVm>
+        ?? new List<ThongKeGiangVienVm>();
+
+    var thongKeLopHocPhan = ViewBag.ThongKeLopHocPhan as List<ThongKeLopHocPhanVm>
+        ?? new List<ThongKeLopHocPhanVm>();
+
+    var sinhVienGioiTheoLopMon = ViewBag.SinhVienGioiTheoLopMon as List<SinhVienGioiTheoLopMonVm>
+        ?? new List<SinhVienGioiTheoLopMonVm>();
+}
+
+<style>
+    .thongke-page .card-custom {
+        border: 0;
+        border-radius: 16px;
+        box-shadow: 0 6px 18px rgba(15, 23, 42, .08);
+        overflow: hidden;
+    }
+
+    .thongke-page .page-title {
+        font-size: 1.45rem;
+        font-weight: 800;
+        color: #1f2937;
+    }
+
+    .thongke-page .page-subtitle {
+        color: #6b7280;
+        font-size: .95rem;
+    }
+
+    .thongke-page .stat-card {
+        border: 0;
+        border-radius: 16px;
+        padding: 18px;
+        color: #fff;
+        min-height: 120px;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, .10);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .thongke-page .stat-number {
+        font-size: 1.85rem;
+        font-weight: 800;
+        line-height: 1.1;
+    }
+
+    .thongke-page .stat-label {
+        font-size: .88rem;
+        opacity: .95;
+        margin-top: 8px;
+    }
+
+    .thongke-page .stat-icon {
+        position: absolute;
+        right: 16px;
+        bottom: 10px;
+        font-size: 42px;
+        opacity: .25;
+    }
+
+    .bg-blue {
+        background: linear-gradient(135deg, #2563eb, #38bdf8);
+    }
+
+    .bg-green {
+        background: linear-gradient(135deg, #059669, #34d399);
+    }
+
+    .bg-cyan {
+        background: linear-gradient(135deg, #0891b2, #22d3ee);
+    }
+
+    .bg-orange {
+        background: linear-gradient(135deg, #f59e0b, #fb923c);
+    }
+
+    .bg-red {
+        background: linear-gradient(135deg, #dc2626, #fb7185);
+    }
+
+    .bg-gray {
+        background: linear-gradient(135deg, #475569, #94a3b8);
+    }
+
+    .thongke-page .table thead th {
+        background: #f8fafc;
+        color: #475569;
+        font-size: .78rem;
+        text-transform: uppercase;
+        white-space: nowrap;
+        vertical-align: middle;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .thongke-page .table tbody td {
+        vertical-align: middle;
+        font-size: .88rem;
+    }
+
+    .thongke-page .student-code {
+        font-weight: 800;
+        color: #2563eb;
+    }
+
+    .thongke-page .student-name {
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .thongke-page .section-title {
+        font-weight: 800;
+        color: #1f2937;
+    }
+
+    .thongke-page .section-subtitle {
+        color: #64748b;
+        font-size: .85rem;
+    }
+
+    .thongke-page .badge-soft-success {
+        background: #dcfce7;
+        color: #15803d;
+        font-weight: 700;
+    }
+
+    .thongke-page .badge-soft-primary {
+        background: #dbeafe;
+        color: #1d4ed8;
+        font-weight: 700;
+    }
+
+    .thongke-page .badge-soft-warning {
+        background: #fef3c7;
+        color: #b45309;
+        font-weight: 700;
+    }
+
+    .thongke-page .empty-state {
+        padding: 34px;
+        text-align: center;
+        color: #64748b;
+    }
+
+    .thongke-page .rank-icon {
+        width: 26px;
+        display: inline-block;
+        text-align: center;
+    }
+
+    .thongke-page .mini-info {
+        color: #64748b;
+        font-size: .8rem;
+    }
+
+    .thongke-page .table-hover tbody tr:hover {
+        background-color: #f8fafc;
+    }
+
+    .thongke-page .btn {
+        border-radius: 10px;
+    }
+</style>
+
+<div class="thongke-page">
+
+    <div class="d-flex justify-content-between align-items-start flex-wrap mb-3">
+        <div>
+            <div class="page-title">
+                <i class="fas fa-chart-pie text-primary mr-2"></i>
+                Dashboard thống kê đào tạo
+            </div>
+            <div class="page-subtitle">
+                Tổng quan hệ thống, lớp học phần, giảng viên phụ trách và sinh viên giỏi theo từng lớp / từng môn.
+            </div>
+        </div>
+
+        <div class="mt-2 mt-md-0">
+            <a href="/HocVu/Index" class="btn btn-primary font-weight-bold mr-2">
+                <i class="fas fa-user-shield mr-1"></i>
+                Cảnh báo học vụ
+            </a>
+
+            <a href="/ThongKe/Index" class="btn btn-light font-weight-bold">
+                <i class="fas fa-sync-alt mr-1"></i>
+                Làm mới
+            </a>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 col-12 mb-3">
+            <div class="stat-card bg-blue">
+                <div class="stat-number">@ViewBag.TongSV</div>
+                <div class="stat-label">Sinh viên toàn trường</div>
+                <i class="fas fa-user-graduate stat-icon"></i>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 col-12 mb-3">
+            <div class="stat-card bg-green">
+                <div class="stat-number">@ViewBag.TongGV</div>
+                <div class="stat-label">Giảng viên & cán bộ</div>
+                <i class="fas fa-chalkboard-teacher stat-icon"></i>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 col-12 mb-3">
+            <div class="stat-card bg-orange">
+                <div class="stat-number">@ViewBag.TongLhpMo</div>
+                <div class="stat-label">Lớp học phần đã mở</div>
+                <i class="fas fa-layer-group stat-icon"></i>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 col-12 mb-3">
+            <div class="stat-card bg-red">
+                <div class="stat-number">@ViewBag.TongKhoa</div>
+                <div class="stat-label">Khoa & viện đào tạo</div>
+                <i class="fas fa-building stat-icon"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="card card-custom mb-4">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <div class="section-title">
+                        <i class="fas fa-medal text-warning mr-1"></i>
+                        Bảng vàng - Top 5 sinh viên xuất sắc nhất
+                    </div>
+                    <div class="section-subtitle">
+                        Xếp hạng theo điểm tổng kết cao nhất trong kết quả học tập.
+                    </div>
+                </div>
+
+                <div class="mt-2 mt-md-0">
+                    <span class="badge badge-soft-success p-2">
+                        Top @topSinhVien.Count sinh viên
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Hạng</th>
+                            <th>MSSV</th>
+                            <th>Họ và tên</th>
+                            <th>Môn đạt điểm cao</th>
+                            <th>Giảng viên</th>
+                            <th>Lớp học phần</th>
+                            <th class="text-center">Điểm tổng kết</th>
+                            <th class="text-center">Xếp loại</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @{
+                            int rank = 1;
+                        }
+
+                        @foreach (var kq in topSinhVien)
+                        {
+                            <tr>
+                                <td class="font-weight-bold">
+                                    <span class="rank-icon">
+                                        @if (rank == 1)
+                                        {
+                                            <i class="fas fa-trophy text-warning"></i>
+                                        }
+                                        else if (rank == 2)
+                                        {
+                                            <i class="fas fa-trophy" style="color:#C0C0C0"></i>
+                                        }
+                                        else if (rank == 3)
+                                        {
+                                            <i class="fas fa-trophy" style="color:#cd7f32"></i>
+                                        }
+                                    </span>
+                                    <span class="@(rank <= 3 ? "text-danger" : "text-muted")">
+                                        #@rank
+                                    </span>
+                                </td>
+
+                                <td class="student-code">
+                                    @kq.MaDangKyNavigation?.Mssv
+                                </td>
+
+                                <td class="student-name">
+                                    @kq.MaDangKyNavigation?.MssvNavigation?.HoTen
+                                </td>
+
+                                <td>
+                                    <span class="font-italic">
+                                        @kq.MaDangKyNavigation?.MaMonNavigation?.TenMon
+                                    </span>
+                                </td>
+
+                                <td>
+                                    @(kq.MaDangKyNavigation?.MaLhpNavigation?.MaGvNavigation?.HoTen ?? "Chưa gán")
+                                </td>
+
+                                <td>
+                                    <span class="student-code">
+                                        @(kq.MaDangKyNavigation?.MaLhp ?? "Chưa gán")
+                                    </span>
+                                </td>
+
+                                <td class="text-center font-weight-bold text-danger">
+                                    @(kq.DiemTongKet.HasValue ? kq.DiemTongKet.Value.ToString("0.00") : "-")
+                                </td>
+
+                                <td class="text-center">
+                                    <span class="badge badge-soft-success">
+                                        @(string.IsNullOrWhiteSpace(kq.XepLoai) ? "Giỏi" : kq.XepLoai)
+                                    </span>
+                                </td>
+                            </tr>
+
+                            rank++;
+                        }
+
+                        @if (!topSinhVien.Any())
+                        {
+                            <tr>
+                                <td colspan="8">
+                                    <div class="empty-state">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        Chưa có dữ liệu điểm xuất sắc.
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card card-custom mb-4">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <div class="section-title">
+                        <i class="fas fa-user-tie text-primary mr-1"></i>
+                        Thống kê theo giảng viên
+                    </div>
+                    <div class="section-subtitle">
+                        Tổng hợp số môn, số lớp học phần, số sinh viên đăng ký và số sinh viên giỏi theo từng giảng viên.
+                    </div>
+                </div>
+
+                <div class="mt-2 mt-md-0">
+                    <span class="badge badge-soft-primary p-2">
+                        @thongKeGiangVien.Count giảng viên
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Giảng viên</th>
+                            <th class="text-center">Số môn phụ trách</th>
+                            <th class="text-center">Số lớp học phần</th>
+                            <th class="text-center">Tổng SV đăng ký</th>
+                            <th class="text-center">SV giỏi</th>
+                            <th class="text-center">Điểm TB</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var item in thongKeGiangVien)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="student-name">
+                                        <i class="fas fa-user-tie text-primary mr-1"></i>
+                                        @item.TenGiangVien
+                                    </div>
+                                </td>
+
+                                <td class="text-center">
+                                    <span class="badge badge-soft-primary">
+                                        @item.SoMonPhuTrach
+                                    </span>
+                                </td>
+
+                                <td class="text-center">
+                                    @item.SoLopHocPhan
+                                </td>
+
+                                <td class="text-center font-weight-bold">
+                                    @item.TongSinhVien
+                                </td>
+
+                                <td class="text-center">
+                                    <span class="badge badge-soft-success">
+                                        @item.TongSinhVienGioi
+                                    </span>
+                                </td>
+
+                                <td class="text-center font-weight-bold">
+                                    @(item.DiemTrungBinh.HasValue ? item.DiemTrungBinh.Value.ToString("0.00") : "-")
+                                </td>
+                            </tr>
+                        }
+
+                        @if (!thongKeGiangVien.Any())
+                        {
+                            <tr>
+                                <td colspan="6">
+                                    <div class="empty-state">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        Chưa có dữ liệu thống kê giảng viên.
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card card-custom mb-4">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <div class="section-title">
+                        <i class="fas fa-layer-group text-info mr-1"></i>
+                        Thống kê theo lớp học phần / giảng viên
+                    </div>
+                    <div class="section-subtitle">
+                        Một môn có thể có nhiều lớp học phần và nhiều giảng viên khác nhau phụ trách.
+                    </div>
+                </div>
+
+                <div class="mt-2 mt-md-0">
+                    <span class="badge badge-soft-primary p-2">
+                        @thongKeLopHocPhan.Count lớp học phần
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Mã LHP</th>
+                            <th>Môn học</th>
+                            <th>Giảng viên</th>
+                            <th>Lớp</th>
+                            <th>Học kỳ</th>
+                            <th class="text-center">Sĩ số</th>
+                            <th class="text-center">SV giỏi</th>
+                            <th class="text-center">Điểm TB</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var item in thongKeLopHocPhan)
+                        {
+                            var tiLeDangKy = item.SiSoToiDa > 0
+                                ? Math.Round((decimal)item.SoSinhVienDangKy / item.SiSoToiDa * 100, 1)
+                                : 0;
+
+                            <tr>
+                                <td class="student-code">
+                                    @item.MaLhp
+                                </td>
+
+                                <td>
+                                    <div class="student-name">
+                                        @item.TenMon
+                                    </div>
+                                </td>
+
+                                <td>
+                                    @item.TenGiangVien
+                                </td>
+
+                                <td>
+                                    @item.TenLop
+                                </td>
+
+                                <td>
+                                    @item.TenHocKy
+                                </td>
+
+                                <td class="text-center">
+                                    <div class="font-weight-bold">
+                                        @item.SoSinhVienDangKy / @item.SiSoToiDa
+                                    </div>
+                                    <div class="mini-info">
+                                        @tiLeDangKy%
+                                    </div>
+                                </td>
+
+                                <td class="text-center">
+                                    <span class="badge badge-soft-success">
+                                        @item.SoSinhVienGioi
+                                    </span>
+                                </td>
+
+                                <td class="text-center font-weight-bold">
+                                    @(item.DiemTrungBinh.HasValue ? item.DiemTrungBinh.Value.ToString("0.00") : "-")
+                                </td>
+                            </tr>
+                        }
+
+                        @if (!thongKeLopHocPhan.Any())
+                        {
+                            <tr>
+                                <td colspan="8">
+                                    <div class="empty-state">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        Chưa có dữ liệu lớp học phần.
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card card-custom mb-4">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <div class="section-title">
+                        <i class="fas fa-star text-warning mr-1"></i>
+                        Sinh viên giỏi theo từng lớp / từng môn
+                    </div>
+                    <div class="section-subtitle">
+                        Điều kiện: điểm tổng kết từ 8.5 trở lên hoặc xếp loại Giỏi / Xuất sắc.
+                    </div>
+                </div>
+
+                <div class="mt-2 mt-md-0">
+                    <span class="badge badge-soft-warning p-2">
+                        @sinhVienGioiTheoLopMon.Count nhóm thống kê
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Lớp</th>
+                            <th>Môn học</th>
+                            <th>Lớp học phần</th>
+                            <th>Giảng viên</th>
+                            <th class="text-center">Số SV giỏi</th>
+                            <th class="text-center">Điểm cao nhất</th>
+                            <th>Top sinh viên</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var item in sinhVienGioiTheoLopMon)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="student-name">
+                                        @item.TenLop
+                                    </div>
+                                    <div class="mini-info">
+                                        @item.MaLop
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="student-name">
+                                        @item.TenMon
+                                    </div>
+                                    <div class="mini-info">
+                                        @item.MaMon
+                                    </div>
+                                </td>
+
+                                <td class="student-code">
+                                    @item.MaLhp
+                                </td>
+
+                                <td>
+                                    @item.TenGiangVien
+                                </td>
+
+                                <td class="text-center">
+                                    <span class="badge badge-soft-success">
+                                        @item.SoSinhVienGioi
+                                    </span>
+                                </td>
+
+                                <td class="text-center font-weight-bold text-danger">
+                                    @(item.DiemCaoNhat.HasValue ? item.DiemCaoNhat.Value.ToString("0.00") : "-")
+                                </td>
+
+                                <td>
+                                    @foreach (var sv in item.DanhSachSinhVien)
+                                    {
+                                        <div class="mb-1">
+                                            <span class="student-code">
+                                                @sv.Mssv
+                                            </span>
+                                            -
+                                            <span class="student-name">
+                                                @sv.HoTen
+                                            </span>
+
+                                            <span class="badge badge-light border ml-1">
+                                                @(sv.DiemTongKet.HasValue ? sv.DiemTongKet.Value.ToString("0.00") : "-")
+                                            </span>
+
+                                            @if (!string.IsNullOrWhiteSpace(sv.XepLoai))
+                                            {
+                                                <span class="badge badge-soft-success ml-1">
+                                                    @sv.XepLoai
+                                                </span>
+                                            }
+                                        </div>
+                                    }
+                                </td>
+                            </tr>
+                        }
+
+                        @if (!sinhVienGioiTheoLopMon.Any())
+                        {
+                            <tr>
+                                <td colspan="7">
+                                    <div class="empty-state">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        Chưa có dữ liệu sinh viên giỏi theo lớp / môn.
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>

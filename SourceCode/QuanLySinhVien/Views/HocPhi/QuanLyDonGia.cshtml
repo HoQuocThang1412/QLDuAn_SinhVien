@@ -1,0 +1,204 @@
+﻿@model List<QuanLySinhVien.Models.DonGiaHocPhi>
+@{
+    ViewData["Title"] = "Quản lý Đơn giá & Thanh toán";
+    var qr = ViewBag.ConfigQR as QuanLySinhVien.Models.CauHinhQR;
+}
+
+<div class="card card-outline card-success shadow-sm mb-4">
+    <div class="card-header">
+        <h3 class="card-title font-weight-bold text-success"><i class="fas fa-qrcode mr-2"></i> CẤU HÌNH TÀI KHOẢN NHẬN TIỀN (VIETQR)</h3>
+        <div class="card-tools">
+            <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
+        </div>
+    </div>
+    <form asp-action="LuuCaiDatQR" method="post">
+        @Html.AntiForgeryToken()
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3 form-group">
+                    <label class="small font-weight-bold">Ngân hàng:</label>
+                    <select name="MaNganHang" id="selNganHang" class="form-control form-control-sm" required>
+                        <option value="">-- Chọn --</option>
+                        @foreach (var nh in ViewBag.DSNganHang)
+                        {
+                            <option value="@nh.Ma" selected="@(qr?.MaNganHang == nh.Ma)">@nh.Ten</option>
+                        }
+                    </select>
+                    <input type="hidden" name="TenNganHang" id="txtTenNganHang" value="@qr?.TenNganHang" />
+                </div>
+                <div class="col-md-3 form-group">
+                    <label class="small font-weight-bold">Số tài khoản:</label>
+                    <input type="text" name="SoTaiKhoan" class="form-control form-control-sm" value="@qr?.SoTaiKhoan" required />
+                </div>
+                <div class="col-md-4 form-group">
+                    <label class="small font-weight-bold">Chủ tài khoản (In hoa):</label>
+                    <input type="text" name="TenChuTaiKhoan" class="form-control form-control-sm text-uppercase" value="@qr?.TenChuTaiKhoan" required />
+                </div>
+                <div class="col-md-2 mt-4 pt-1">
+                    <button type="submit" class="btn btn-success btn-sm btn-block font-weight-bold shadow-sm">
+                        <i class="fas fa-save mr-1"></i> LƯU QR
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="card card-outline card-primary shadow-sm">
+    <div class="card-header">
+        <h3 class="card-title font-weight-bold text-primary"><i class="fas fa-money-check-alt mr-2"></i> THIẾT LẬP ĐƠN GIÁ TÍN CHỈ</h3>
+    </div>
+    <div class="card-body">
+        <form asp-action="ThemDonGia" method="post" class="row mb-4 p-3 border rounded bg-light mx-0 shadow-sm">
+            <div class="col-md-3">
+                <label class="small font-weight-bold">Khoa:</label>
+                <select name="MaKhoa" class="form-control form-control-sm" required>
+                    <option value="">-- Chọn Khoa --</option>
+                    @foreach (var k in ViewBag.DSKhoa)
+                    {
+                        <option value="@k.MaKhoa">@k.TenKhoa</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="small font-weight-bold">Khóa:</label>
+                <select name="KhoaHoc" class="form-control form-control-sm" required>
+                    <option value="">-- Chọn Khóa --</option>
+                    @if (ViewBag.DSKhoaHoc != null)
+                    {
+                        foreach (var kh in ViewBag.DSKhoaHoc)
+                        {
+                            <option value="@kh">@kh</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="small font-weight-bold">Đơn giá/TC (VNĐ):</label>
+                <input type="number"
+                       name="SoTienMotTinChi"
+                       class="form-control"
+                       min="1"
+                       max="10000000"
+                       step="1"
+                       required />
+            </div>
+            <div class="col-md-2">
+                <label class="small font-weight-bold">Ghi chú:</label>
+                <input type="text" name="GhiChu" class="form-control form-control-sm" />
+            </div>
+            <div class="col-md-2 mt-4">
+                <button type="submit" class="btn btn-primary btn-sm btn-block font-weight-bold shadow-sm"><i class="fas fa-plus"></i> THÊM GIÁ</button>
+            </div>
+        </form>
+
+        <table class="table table-bordered table-striped text-center align-middle shadow-sm">
+            <thead class="bg-navy text-white">
+                <tr>
+                    <th>Khoa</th>
+                    <th>Khóa</th>
+                    <th>Đơn giá/TC</th>
+                    <th>Ghi chú</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td class="text-left">@item.MaKhoa</td>
+                        <td class="font-weight-bold text-primary">@item.KhoaHoc</td>
+                        <td class="text-danger font-weight-bold">@item.SoTienMotTinChi.ToString("N0") đ</td>
+                        <td>@item.GhiChu</td>
+                        <td>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-xs btn-info btn-edit mr-2"
+                                        data-id="@item.Id" data-khoa="@item.MaKhoa" data-khoahoc="@item.KhoaHoc"
+                                        data-gia="@item.SoTienMotTinChi" data-ghichu="@item.GhiChu">
+                                    <i class="fas fa-edit"></i> Sửa
+                                </button>
+                                <form asp-action="XoaDonGia" method="post" onsubmit="return confirm('Xóa nhé?');">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <button type="submit" class="btn btn-xs btn-danger"><i class="fas fa-trash"></i> Xóa</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="modalSua" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title font-weight-bold">CẬP NHẬT ĐƠN GIÁ</h5>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <form asp-action="SuaDonGia" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="Id" id="edit-id" />
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <label>Khoa:</label>
+                            <select name="MaKhoa" id="edit-khoa" class="form-control">
+                                @foreach (var k in ViewBag.DSKhoa)
+                                {
+                                    <option value="@k.MaKhoa">@k.TenKhoa</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <label>Khóa học:</label>
+                            <select name="KhoaHoc" id="edit-khoahoc" class="form-control">
+                                @if (ViewBag.DSKhoaHoc != null)
+                                {
+                                    foreach (var kh in ViewBag.DSKhoaHoc)
+                                    {
+                                        <option value="@kh">@kh</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label>Đơn giá/TC:</label>
+                            <input type="number" name="SoTienMotTinChi" id="edit-gia" class="form-control" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label>Ghi chú:</label>
+                            <input type="text" name="GhiChu" id="edit-ghichu" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-info shadow">LƯU THAY ĐỔI</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Xử lý nút Sửa đơn giá
+            $('.btn-edit').click(function () {
+                $('#edit-id').val($(this).data('id'));
+                $('#edit-khoa').val($(this).data('khoa'));
+                $('#edit-khoahoc').val($(this).data('khoahoc'));
+                $('#edit-gia').val($(this).data('gia'));
+                $('#edit-ghichu').val($(this).data('ghichu'));
+                $('#modalSua').modal('show');
+            });
+
+            // Xử lý Dropdown Ngân hàng
+            $('#selNganHang').change(function() {
+                $('#txtTenNganHang').val($(this).find("option:selected").text());
+            });
+        });
+    </script>
+}

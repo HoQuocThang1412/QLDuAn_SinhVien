@@ -1,0 +1,128 @@
+﻿@model QuanLySinhVien.Models.SinhVien
+@{
+    ViewData["Title"] = "Hồ sơ sinh viên";
+    string badgeClass = "badge-secondary";
+    if (Model.TrangThai == "Đang học") badgeClass = "badge-success";
+    else if (Model.TrangThai == "Bảo lưu") badgeClass = "badge-warning";
+    else if (Model.TrangThai == "Thôi học") badgeClass = "badge-danger";
+    else if (Model.TrangThai == "Đã tốt nghiệp") badgeClass = "badge-info";
+}
+
+<div class="row">
+    <!-- ── Cột trái: thông tin tóm tắt ── -->
+    <div class="col-md-4">
+        <div class="card card-primary card-outline">
+            <div class="card-body box-profile">
+
+                <!-- Avatar chữ cái đầu -->
+                <div class="text-center">
+                    <div style="width:80px;height:80px;border-radius:50%;background:#007bff;
+                                display:inline-flex;align-items:center;justify-content:center;
+                                font-size:28px;font-weight:700;color:#fff;margin-bottom:10px;">
+                        @Model.HoTen.Substring(0, 1).ToUpper()
+                    </div>
+                </div>
+
+                <h3 class="profile-username text-center">@Model.HoTen</h3>
+                <p class="text-muted text-center mb-0">@Model.MaLopNavigation?.TenLop</p>
+                <p class="text-muted text-center">
+                    <small>@Model.MaLopNavigation?.MaKhoaNavigation?.TenKhoa</small>
+                </p>
+
+                <ul class="list-group list-group-unbordered mb-3">
+                    <li class="list-group-item">
+                        <b>MSSV</b>
+                        <span class="float-right"><code>@Model.Mssv</code></span>
+                    </li>
+                    <li class="list-group-item">
+                        <b>Khoa</b>
+                        <span class="float-right">
+                            @(Model.MaLopNavigation?.MaKhoaNavigation?.TenKhoa ?? "Chưa cập nhật")
+                        </span>
+                    </li>
+                    <li class="list-group-item">
+                        <b>Trạng thái</b>
+                        <span class="float-right">
+                            <span class="badge @badgeClass">@Model.TrangThai</span>
+                        </span>
+                    </li>
+                </ul>
+
+                <a href="/SinhVien/Edit/@Model.Mssv" class="btn btn-warning btn-block">
+                    <i class="fas fa-edit mr-1"></i> Sửa thông tin
+                </a>
+                <a href="/SinhVien/Index" class="btn btn-default btn-block mt-2">
+                    <i class="fas fa-arrow-left mr-1"></i> Quay lại danh sách
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Cột phải: thông tin chi tiết ── -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-id-card mr-2"></i> Thông tin chi tiết
+                </h3>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-bordered mb-0">
+                    <tbody>
+                        <tr>
+                            <th style="width:200px" class="bg-light">Họ và tên</th>
+                            <td>@Model.HoTen</td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">MSSV</th>
+                            <td><code>@Model.Mssv</code></td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">Ngày sinh</th>
+                            <td>
+                                @if (Model.NgaySinh != null)
+                                {
+                                    @Model.NgaySinh.ToString("dd/MM/yyyy")
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Chưa cập nhật</span>
+                                }
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">Giới tính</th>
+                            <td>@(Model.GioiTinh ?? "Chưa cập nhật")</td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">Lớp học</th>
+                            <td>@(Model.MaLopNavigation?.TenLop ?? "Chưa cập nhật")</td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">Khoa</th>
+                            <td>@(Model.MaLopNavigation?.MaKhoaNavigation?.TenKhoa ?? "Chưa cập nhật")</td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">Số điện thoại</th>
+                            <td>@(Model.SoDienThoai ?? "Chưa cập nhật")</td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">Email</th>
+                            <td>@(Model.Email ?? "Chưa cập nhật")</td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">Địa chỉ</th>
+                            <td>@(Model.DiaChi ?? "Chưa cập nhật")</td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">Trạng thái</th>
+                            <td>
+                                <span class="badge @badgeClass">@Model.TrangThai</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

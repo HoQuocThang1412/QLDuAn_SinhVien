@@ -1,0 +1,441 @@
+﻿@model List<QuanLySinhVien.Models.DangKyHoc>
+@{
+    ViewData["Title"] = "Nhập điểm học phần";
+    string maHocKy = ViewBag.MaHocKy;
+    string maLhp = ViewBag.MaLhp;
+
+    // LOGIC THỐNG KÊ
+    var dsCoDiem = Model?.Where(m => m.KetQuaHocTap != null && m.KetQuaHocTap.DiemTongKet.HasValue).ToList()
+                    ?? new List<QuanLySinhVien.Models.DangKyHoc>();
+
+    int soCoDiem = dsCoDiem.Count;
+    int tongSinhVien = Model?.Count ?? 0;
+    int tyLeDaCham = tongSinhVien > 0 ? (int)Math.Round((double)soCoDiem * 100 / tongSinhVien) : 0;
+
+    int soDau = dsCoDiem.Count(m => m.KetQuaHocTap.QuaMon == true);
+    int soRot = soCoDiem - soDau;
+
+    decimal diemTB = soCoDiem > 0 ? Math.Round(dsCoDiem.Average(m => m.KetQuaHocTap.DiemTongKet.Value), 1) : 0;
+    decimal maxDiem = soCoDiem > 0 ? dsCoDiem.Max(m => m.KetQuaHocTap.DiemTongKet.Value) : 0;
+    decimal minDiem = soCoDiem > 0 ? dsCoDiem.Min(m => m.KetQuaHocTap.DiemTongKet.Value) : 0;
+}
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-theme/0.1.0-beta.10/select2-bootstrap.min.css" rel="stylesheet" />
+
+<style>
+    .table-head-fixed th {
+        background-color: #f8f9fa !important;
+        box-shadow: inset 0 -1px 0 #dee2e6;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .input-diem:focus {
+        background-color: #e8f0fe;
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+    }
+</style>
+
+<div class="card card-outline card-primary mb-4">
+    <div class="card-header">
+        <h3 class="card-title font-weight-bold">
+            <i class="fas fa-filter mr-1"></i> BỘ LỌC LỚP CHẤM ĐIỂM
+        </h3>
+    </div>
+
+    <div class="card-body pb-0">
+        <form method="get" action="/Diem/NhapDiem">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label>Chọn Học kỳ:</label>
+                    <select name="maHocKy" class="form-control select2" onchange="this.form.submit()">
+                        <option value="">-- Click để chọn học kỳ --</option>
+                        @if (ViewBag.DanhSachHK != null)
+                        {
+                            foreach (var hk in ViewBag.DanhSachHK)
+                            {
+                                <option value="@hk.MaHocKy" selected="@(ViewBag.MaHocKy == hk.MaHocKy ? "selected" : null)">
+                                    @hk.TenHocKy
+                                </option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label>Chọn Lớp Học Phần:</label>
+                    <select name="maLhp" class="form-control select2" onchange="this.form.submit()">
+                        <option value="">-- Click để chọn Lớp đang dạy --</option>
+                        @if (ViewBag.DanhSachLhp != null)
+                        {
+                            foreach (var lhp in ViewBag.DanhSachLhp)
+                            {
+                                <option value="@lhp.Value" selected="@(ViewBag.MaLhp == lhp.Value ? "selected" : null)">
+                                    @lhp.Text
+                                </option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-2 text-right mt-4 pt-1">
+                    <a href="/Diem/NhapDiem" class="btn btn-default w-100">
+                        <i class="fas fa-sync"></i> Bỏ chọn
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@* 
+    Có điểm: hiện thống kê.
+    Chưa có điểm hoặc LHP trống: ẩn thống kê để không hiển thị số 0 vô nghĩa.
+*@
+@if (!string.IsNullOrEmpty(maHocKy)
+    && !string.IsNullOrEmpty(maLhp)
+    && Model != null
+    && Model.Any()
+    && soCoDiem > 0)
+{
+    <div class="row mb-3">
+        <div class="col-md-3 col-sm-6 col-12">
+            <div class="info-box bg-info shadow-sm">
+                <span class="info-box-icon">
+                    <i class="fas fa-users"></i>
+                </span>
+
+                <div class="info-box-content">
+                    <span class="info-box-text">Đã chấm điểm</span>
+                    <span class="info-box-number">@soCoDiem / @tongSinhVien SV (@tyLeDaCham%)</span>
+
+                    <div class="progress">
+                        <div class="progress-bar" style="width: @(tyLeDaCham)%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6 col-12">
+            <div class="info-box bg-success shadow-sm">
+                <span class="info-box-icon">
+                    <i class="fas fa-check-circle"></i>
+                </span>
+
+                <div class="info-box-content">
+                    <span class="info-box-text">Tỷ lệ Đậu</span>
+                    <span class="info-box-number">@soDau SV (@(soDau * 100 / soCoDiem)%)</span>
+                    <span class="progress-description text-sm">Số SV Rớt: @soRot</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6 col-12">
+            <div class="info-box bg-warning shadow-sm">
+                <span class="info-box-icon">
+                    <i class="fas fa-chart-line text-white"></i>
+                </span>
+
+                <div class="info-box-content text-white">
+                    <span class="info-box-text">Điểm Trung Bình</span>
+                    <span class="info-box-number h4 mb-0">@diemTB.ToString("0.0")</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6 col-12">
+            <div class="info-box bg-danger shadow-sm">
+                <span class="info-box-icon">
+                    <i class="fas fa-trophy"></i>
+                </span>
+
+                <div class="info-box-content">
+                    <span class="info-box-text">Cao nhất / Thấp nhất</span>
+                    <span class="info-box-number h4 mb-0">@maxDiem.ToString("0.0") / @minDiem.ToString("0.0")</span>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="card mt-3 shadow">
+    <div class="card-header bg-success">
+        <h3 class="card-title">
+            <i class="fas fa-edit mr-1"></i>
+            Nhập điểm môn <strong>@(ViewBag.TenMon ?? "Đang chọn...")</strong> - LHP: <strong>@maLhp</strong>
+        </h3>
+    </div>
+
+    <div class="card-body p-0">
+        @if (string.IsNullOrEmpty(maHocKy) || string.IsNullOrEmpty(maLhp))
+        {
+            <div class="text-center py-5">
+                <i class="fas fa-hand-point-up fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Vui lòng chọn Học kỳ và Lớp học phần ở trên để hiển thị danh sách sinh viên.</h5>
+            </div>
+        }
+        else if (Model == null || !Model.Any())
+        {
+            <div class="text-center py-5">
+                <i class="fas fa-user-slash fa-3x text-warning mb-3"></i>
+                <h5 class="text-danger">Lớp này chưa có sinh viên nào đăng ký môn này.</h5>
+            </div>
+        }
+        else
+        {
+            <form asp-action="LuuDiem" method="post" id="formNhapDiem">
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" name="maLhp" value="@maLhp" />
+                <input type="hidden" name="maHocKy" value="@maHocKy" />
+
+                <div class="table-responsive" style="max-height: 550px; overflow-y: auto;">
+                    <table class="table table-bordered table-striped table-hover text-center table-head-fixed mb-0" id="tableDiem">
+                        <thead class="bg-light">
+                            <tr>
+                                <th style="width: 50px">STT</th>
+                                <th style="width: 110px">MSSV</th>
+                                <th>Họ và Tên</th>
+                                <th style="width: 110px">
+                                    Điểm QT <small>(@((ViewBag.HeSoQt * 100)?.ToString("0") ?? "30")%)</small>
+                                </th>
+                                <th style="width: 110px">
+                                    Điểm Thi <small>(@((ViewBag.HeSoCk * 100)?.ToString("0") ?? "70")%)</small>
+                                </th>
+                                <th style="width: 90px">Tổng Kết</th>
+                                <th style="width: 110px">Xếp Loại</th>
+                                <th style="width: 90px">Trạng thái</th>
+                                <th style="width: 80px">Thao tác</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @for (int i = 0; i < Model.Count; i++)
+                            {
+                                var kq = Model[i].KetQuaHocTap ?? new QuanLySinhVien.Models.KetQuaHocTap { MaDangKy = Model[i].MaDangKy };
+
+                                <tr>
+                                    <td class="align-middle">@(i + 1)</td>
+
+                                    <td class="font-weight-bold text-primary align-middle">
+                                        @Model[i].Mssv
+                                    </td>
+
+                                    <td class="text-left align-middle">
+                                        @Model[i].MssvNavigation?.HoTen
+                                    </td>
+
+                                    <td class="align-middle">
+                                        <input type="hidden" name="points[@i].MaDangKy" value="@Model[i].MaDangKy" />
+
+                                        <input type="number"
+                                               step="0.1"
+                                               min="0"
+                                               max="10"
+                                               name="points[@i].DiemQt"
+                                               value="@(kq.DiemQt?.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture))"
+                                               class="form-control text-center mx-auto input-diem qt-input"
+                                               data-index="@i"
+                                               style="width: 75px;" />
+                                    </td>
+
+                                    <td class="align-middle">
+                                        <input type="number"
+                                               step="0.1"
+                                               min="0"
+                                               max="10"
+                                               name="points[@i].DiemThi"
+                                               value="@(kq.DiemThi?.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture))"
+                                               class="form-control text-center mx-auto input-diem thi-input"
+                                               data-index="@i"
+                                               style="width: 75px;" />
+                                    </td>
+
+                                    <td class="font-weight-bold text-primary align-middle tk-result" id="tk-@i">
+                                        @(kq.DiemTongKet?.ToString("0.0") ?? "-")
+                                    </td>
+
+                                    <td class="align-middle xl-result" id="xl-@i">
+                                        @if (!string.IsNullOrEmpty(kq.XepLoai))
+                                        {
+                                            <span class="badge @(kq.XepLoai == "Kém" || kq.XepLoai == "Yếu" ? "badge-danger" : "badge-info") py-2 w-100">
+                                                @kq.XepLoai
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <td class="align-middle tt-result" id="tt-@i">
+                                        @if (kq.QuaMon == true)
+                                        {
+                                            <span class="text-success font-weight-bold">
+                                                <i class="fas fa-check-circle"></i> Đạt
+                                            </span>
+                                        }
+                                        else if (kq.DiemTongKet != null)
+                                        {
+                                            <span class="text-danger font-weight-bold">
+                                                <i class="fas fa-times-circle"></i> Rớt
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <td class="align-middle">
+                                        @if (Model[i].KetQuaHocTap != null)
+                                        {
+                                            <button type="button"
+                                                    class="btn btn-outline-danger btn-sm shadow-sm"
+                                                    onclick="xoaDiemNhanh(@Model[i].MaDangKy)"
+                                                    title="Xóa trắng điểm">
+                                                <i class="fas fa-eraser"></i>
+                                            </button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card-footer bg-white">
+                    <div class="row align-items-center">
+                        <div class="col-md-6 text-left">
+                            <a href="/Diem/TaiTemplate?maLhp=@maLhp" class="btn btn-outline-info mr-2 shadow-sm">
+                                <i class="fas fa-download"></i> Tải Template
+                            </a>
+
+                            <a href="/Diem/XuatExcel?maLhp=@maLhp" class="btn btn-outline-success shadow-sm">
+                                <i class="fas fa-file-excel"></i> Xuất Bảng Điểm
+                            </a>
+                        </div>
+
+                        <div class="col-md-6 text-right">
+                            <button type="submit" class="btn btn-primary btn-lg shadow-sm">
+                                <i class="fas fa-save mr-1"></i> Lưu điểm thủ công
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <form id="formXoaDiem" asp-action="XoaDiem" method="post" style="display:none;">
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" name="maDangKy" id="inputMaDangKyXoa" />
+                <input type="hidden" name="maHocKy" value="@maHocKy" />
+                <input type="hidden" name="maLhp" value="@maLhp" />
+            </form>
+
+            <div class="card-footer bg-light border-top">
+                <form asp-action="ImportDiem" method="post" enctype="multipart/form-data" class="d-flex align-items-center">
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden" name="maHocKy" value="@maHocKy" />
+                    <input type="hidden" name="maLhp" value="@maLhp" />
+
+                    <strong class="text-dark mr-3">
+                        <i class="fas fa-upload text-warning mr-1"></i> Import điểm nhanh:
+                    </strong>
+
+                    <div class="custom-file flex-grow-1 mr-3" style="max-width: 400px;">
+                        <input type="file" name="fileImport" class="custom-file-input" id="customFile" accept=".csv" required>
+                        <label class="custom-file-label" for="customFile">Chọn file Template CSV đã nhập điểm...</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-warning shadow-sm font-weight-bold">
+                        <i class="fas fa-bolt"></i> Import Ngay
+                    </button>
+                </form>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        // LẤY HỆ SỐ ĐIỂM TỪ SERVER
+        const hsQt = @(ViewBag.HeSoQt?.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) ?? "0.3");
+        const hsCk = @(ViewBag.HeSoCk?.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) ?? "0.7");
+
+        $(document).ready(function () {
+        $('.select2').select2({
+        theme: "bootstrap",
+        width: '100%'
+        });
+
+        $('.custom-file-input').on('change', function () {
+        let fileName = $(this).val().split('\\').pop();
+        $(this).next('.custom-file-label').addClass("selected").html(fileName);
+        });
+
+        $('.input-diem').on('input', function () {
+        let val = parseFloat($(this).val());
+
+        if (val > 10) $(this).val(10);
+        if (val < 0) $(this).val(0);
+
+        let index = $(this).data('index');
+
+        let diemQtStr = $(`.qt-input[data-index='${index}']`).val();
+        let diemThiStr = $(`.thi-input[data-index='${index}']`).val();
+
+        if (diemQtStr === "" && diemThiStr === "") {
+        $(`#tk-${index}`).text("-");
+        $(`#xl-${index}`).empty();
+        $(`#tt-${index}`).empty();
+        return;
+        }
+
+        let qt = diemQtStr ? parseFloat(diemQtStr) : 0;
+        let thi = diemThiStr ? parseFloat(diemThiStr) : 0;
+
+        let tk = (qt * hsQt) + (thi * hsCk);
+        tk = Math.round(tk * 10) / 10;
+
+        if (thi < 1.0) tk = 0.0;
+
+        $(`#tk-${index}`).text(tk.toFixed(1));
+
+        let xlHtml = "";
+
+        if (tk >= 9.0) {
+        xlHtml = '<span class="badge badge-info py-2 w-100">Xuất sắc</span>';
+        }
+        else if (tk >= 8.0) {
+        xlHtml = '<span class="badge badge-info py-2 w-100">Giỏi</span>';
+        }
+        else if (tk >= 7.0) {
+        xlHtml = '<span class="badge badge-info py-2 w-100">Khá</span>';
+        }
+        else if (tk >= 5.0) {
+        xlHtml = '<span class="badge badge-info py-2 w-100">Trung bình</span>';
+        }
+        else if (tk >= 4.0) {
+        xlHtml = '<span class="badge badge-danger py-2 w-100">Yếu</span>';
+        }
+        else {
+        xlHtml = '<span class="badge badge-danger py-2 w-100">Kém</span>';
+        }
+
+        $(`#xl-${index}`).html(xlHtml);
+
+        if (tk >= 4.0 && thi >= 1.0) {
+        $(`#tt-${index}`).html('<span class="text-success font-weight-bold"><i class="fas fa-check-circle"></i> Đạt</span>');
+        } else {
+        $(`#tt-${index}`).html('<span class="text-danger font-weight-bold"><i class="fas fa-times-circle"></i> Rớt</span>');
+        }
+        });
+        });
+
+        function xoaDiemNhanh(maDangKy) {
+        if (confirm('Xóa trắng toàn bộ điểm của sinh viên này? \n(Việc này sẽ cho phép sinh viên có thể hủy đăng ký môn học này)')) {
+        document.getElementById('inputMaDangKyXoa').value = maDangKy;
+        document.getElementById('formXoaDiem').submit();
+        }
+        }
+    </script>
+}

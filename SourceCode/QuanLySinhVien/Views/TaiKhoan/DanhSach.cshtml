@@ -1,0 +1,75 @@
+﻿@model IEnumerable<QuanLySinhVien.Models.TaiKhoan>
+@{
+    ViewData["Title"] = "Quản lý Tài khoản Hệ thống";
+}
+
+<div class="card card-outline card-danger shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="card-title font-weight-bold text-danger mb-0"><i class="fas fa-users-cog mr-1"></i> QUẢN LÝ TÀI KHOẢN & BẢO MẬT</h3>
+    </div>
+    
+    <div class="card-body p-0">
+        <div class="p-3 bg-light border-bottom text-right">
+            <small class="text-danger italic font-weight-bold"><i class="fas fa-exclamation-triangle mr-1"></i> Cảnh báo: Việc Reset mật khẩu sẽ đưa mật khẩu về mặc định là <b>123456</b> (đã được mã hóa BCrypt).</small>
+        </div>
+        <table class="table table-bordered table-hover text-center align-middle mb-0">
+            <thead class="bg-dark text-white">
+                <tr>
+                    <th>Tên đăng nhập (ID)</th>
+                    <th>Phân Quyền (Role)</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động nguy hiểm</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Any())
+                {
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="font-weight-bold text-primary align-middle">@item.TenDangNhap</td>
+                            <td class="align-middle">
+                                @if (item.VaiTro == "Admin")
+                                {
+                                    <span class="badge badge-danger px-3 py-2">Quản trị viên</span>
+                                }
+                                else if (item.VaiTro == "GiangVien")
+                                {
+
+                                    <span class="badge badge-success px-3 py-2">Giảng viên</span>
+                                }
+                                else if (item.VaiTro == "CanBo")
+                                {
+
+                                    <span class="badge badge-warning px-3 py-2">Cán bộ Đào tạo</span>
+                                }
+                                else
+                                {
+
+                                    <span class="badge badge-info px-3 py-2">Sinh viên</span>
+                                }
+                            </td>
+                            <td class="align-middle"><span class="text-success font-weight-bold"><i class="fas fa-circle text-xs"></i> Đang hoạt động</span></td>
+                            <td class="align-middle">
+                                @if (item.VaiTro != "Admin" || item.TenDangNhap != User.Identity.Name) // Không cho phép Admin đang đăng nhập tự reset pass của chính mình
+                                {
+                                    <form asp-action="ResetMatKhau" method="post" class="m-0">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="tenDangNhap" value="@item.TenDangNhap" />
+                                        <button type="submit" class="btn btn-warning btn-sm font-weight-bold shadow-sm" onclick="return confirm('Đưa mật khẩu của tài khoản @item.TenDangNhap về 123456?');">
+                                            <i class="fas fa-key mr-1"></i> Reset Pass
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small italic">Tài khoản của bạn</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

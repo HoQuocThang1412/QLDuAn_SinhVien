@@ -1,0 +1,183 @@
+﻿@model QuanLySinhVien.Models.LopHocPhan
+@{
+    ViewData["Title"] = "Chỉnh sửa lớp học phần";
+}
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-theme/0.1.0-beta.10/select2-bootstrap.min.css" rel="stylesheet" />
+
+<style>
+    .tkb-grid th, .tkb-grid td { text-align: center; vertical-align: middle; border: 1px solid #dee2e6; }
+    .tkb-grid th { background-color: #f4f6f9; font-weight: bold; }
+    .cell-tiet { cursor: pointer; transition: background-color 0.2s; height: 40px; user-select: none; }
+    .cell-tiet:hover { background-color: #e9ecef; }
+    .cell-selected { background-color: #28a745 !important; color: white; border-color: #1e7e34; }
+</style>
+
+<div class="card card-outline card-warning shadow-sm">
+    <div class="card-header">
+        <h3 class="card-title font-weight-bold text-warning text-uppercase">
+            <i class="fas fa-edit mr-2"></i> CHỈNH SỬA LỚP HỌC PHẦN
+        </h3>
+    </div>
+
+    <form method="post" action="/LopHocPhan/Edit" id="formLhp">
+        @Html.AntiForgeryToken()
+        
+        <input type="hidden" name="MaLhp" value="@Model.MaLhp" />
+        <input type="hidden" name="tuKhoa" value="@ViewBag.TuKhoa" />
+        <input type="hidden" name="maKhoa" value="@ViewBag.MaKhoa" />
+        <input type="hidden" name="khoaHoc" value="@ViewBag.KhoaHoc" />
+        
+        <input type="hidden" name="ThoiKhoaBieu" id="ThoiKhoaBieu" value="@Model.ThoiKhoaBieu" />
+        <input type="hidden" name="LichHocJson" id="LichHocJson" />
+
+        <div class="card-body">
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger"><ul>@foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors)){ <li>@error.ErrorMessage</li> }</ul></div>
+            }
+
+            <div class="row">
+                <div class="col-md-3 form-group"><label>Mã Lớp học phần</label><input type="text" class="form-control" value="@Model.MaLhp" disabled /></div>
+                <div class="col-md-3 form-group"><label>Học kỳ *</label><select name="MaHocKy" class="form-control select2" required><option value="">-- Chọn --</option>@if(ViewBag.DanhSachHK != null) { foreach (var hk in ViewBag.DanhSachHK) { <option value="@hk.MaHocKy" selected="@(Model.MaHocKy == hk.MaHocKy ? "selected" : null)">@hk.TenHocKy</option> } }</select></div>
+                <div class="col-md-3 form-group"><label>Ngành/Khoa *</label><select id="cboKhoa" class="form-control select2" required><option value="">-- Chọn --</option>@if(ViewBag.DanhSachKhoa != null) { foreach (var k in ViewBag.DanhSachKhoa) { <option value="@(k.MaKhoa?.Trim())" selected="@(Model.MaMonNavigation?.MaKhoa?.Trim() == k.MaKhoa?.Trim() ? "selected" : null)">@k.TenKhoa</option> } }</select></div>
+                <div class="col-md-3 form-group"><label>Môn học *</label><select name="MaMon" id="cboMon" class="form-control select2" required><option value="@Model.MaMon">@Model.MaMonNavigation?.TenMon</option></select></div> 
+            </div> 
+            
+            <div class="row">
+                <div class="col-md-4 form-group">
+                    <label>Giảng viên *</label>
+                    <select name="MaGv" id="cboGv" class="form-control select2" required>
+                        <option value="@Model.MaGv">@Model.MaGvNavigation?.HoTen</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-4 form-group">
+                    <label>Sĩ số tối đa *</label>
+                    <input type="number"
+       name="SiSoToiDa"
+       class="form-control text-danger font-weight-bold"
+       value="@Model.SiSoToiDa"
+       min="1"
+       max="500"
+       step="1"
+       required />
+<small class="text-muted">Sĩ số tối đa phải từ 1 đến 500.</small>
+                </div>
+                
+                <div class="col-md-4 form-group">
+                    <label>Phòng học *</label>
+                    <input type="text" name="PhongHoc" class="form-control" value="@Model.PhongHoc" required />
+                </div>
+            </div>
+
+            <hr />
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="text-info font-weight-bold mb-0"><i class="fas fa-calendar-alt mr-2"></i> PHÂN BỔ THỜI GIAN HỌC</h5>
+                <span id="txtKetQuaTkb" class="badge badge-warning" style="font-size: 14px; padding: 8px 15px;">@Model.ThoiKhoaBieu</span>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-sm tkb-grid" id="tkbTable">
+                    <thead><tr><th style="width: 80px;">Tiết</th><th>Thứ 2</th><th>Thứ 3</th><th>Thứ 4</th><th>Thứ 5</th><th>Thứ 6</th><th>Thứ 7</th><th>CN</th></tr></thead>
+                    <tbody>
+                        @for (int i = 1; i <= 10; i++)
+                        {
+                            <tr><th>Tiết @i</th>@for (int thu = 2; thu <= 8; thu++){ <td class="cell-tiet" data-thu="@thu" data-tiet="@i"></td> }</tr>
+                            if (i == 5) { <tr style="background-color: #f8d7da; height: 10px;"><td colspan="8" class="p-0"></td></tr> }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="card-footer text-right">
+            <a href="/LopHocPhan/Index" class="btn btn-default mr-2"><i class="fas fa-arrow-left"></i> Quay lại</a>
+            <button type="submit" class="btn btn-warning"><i class="fas fa-save"></i> Cập nhật</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function () { 
+            $('.select2').select2({ theme: "bootstrap", width: '100%' }); 
+
+            var dsMon = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.DanhSachMon != null ? ((IEnumerable<QuanLySinhVien.Models.MonHoc>)ViewBag.DanhSachMon).Select(m => new { id = m.MaMon?.Trim() ?? "", text = m.TenMon?.Trim() ?? "", khoa = m.MaKhoa?.Trim() ?? "" }) : null));
+            var dsGv = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.DanhSachGV != null ? ((IEnumerable<QuanLySinhVien.Models.GiangVien>)ViewBag.DanhSachGV).Select(g => new { id = g.MaGv?.Trim() ?? "", text = (g.HoTen?.Trim() ?? "") + " (Mã: " + (g.MaGv?.Trim() ?? "") + ")", khoa = g.MaKhoa?.Trim() ?? "" }) : null));
+            var currentMon = '@(Model.MaMon?.Trim())';
+            var currentGv = '@(Model.MaGv?.Trim())';
+
+            $('#cboKhoa').on('change', function() {
+                var selectedKhoa = $(this).val();
+                var cboMon = $('#cboMon'); var cboGv = $('#cboGv');
+                cboMon.empty().append(new Option('-- Chọn Môn --', '')); cboGv.empty().append(new Option('-- Chọn GV --', ''));
+                if(selectedKhoa) {
+                    if (dsMon) $.each(dsMon, function(i, m) { cboMon.append(new Option(m.text, m.id, false, m.id === currentMon)); });
+                    if (dsGv) $.each(dsGv, function(i, g) { cboGv.append(new Option(g.text, g.id, false, g.id === currentGv)); });
+                }
+                cboMon.trigger('change.select2'); cboGv.trigger('change.select2');
+            });
+            $('#cboKhoa').trigger('change');
+
+            var oldTkb = '@Html.Raw(Model.ThoiKhoaBieu ?? "")';
+            if (oldTkb) {
+                var parts = oldTkb.split('|');
+                parts.forEach(function(p) {
+                    p = p.trim();
+                    if (!p) return;
+                    var thuStr = p.split(' ')[0];
+                    var thu = (thuStr === 'CN') ? 8 : parseInt(thuStr.replace('T', ''));
+                    var match = p.match(/Tiết\s+(\d+)(?:-(\d+))?/);
+                    if (match) {
+                        var start = parseInt(match[1]);
+                        var end = match[2] ? parseInt(match[2]) : start;
+                        for(var i = start; i <= end; i++) {
+                            $('.cell-tiet[data-thu="'+thu+'"][data-tiet="'+i+'"]').addClass('cell-selected');
+                        }
+                    }
+                });
+            }
+
+            // Gọi hàm tính toán lại JSON ngay lúc đầu phòng trường hợp sếp chỉ vô đổi phòng học mà không nhấn lại TKB
+            generateScheduleString();
+
+            var isMouseDown = false;
+            $('.cell-tiet').mousedown(function() { isMouseDown = true; $(this).toggleClass('cell-selected'); generateScheduleString(); })
+                           .mouseenter(function() { if (isMouseDown) { $(this).toggleClass('cell-selected'); generateScheduleString(); } });
+            $(document).mouseup(function() { isMouseDown = false; });
+
+            function generateScheduleString() {
+                var resultArr = [];
+                var scheduleObj = [];
+                for (var thu = 2; thu <= 8; thu++) {
+                    var tiets = $('.cell-selected[data-thu="' + thu + '"]').map(function() { return parseInt($(this).data('tiet')); }).get().sort(function(a, b){ return a - b; });
+                    if (tiets.length > 0) {
+                        var start = tiets[0], current = start;
+                        var strThu = (thu === 8) ? "CN" : "T" + thu;
+                        for (var i = 1; i < tiets.length; i++) {
+                            if (tiets[i] === current + 1) { current = tiets[i]; } 
+                            else {
+                                resultArr.push(strThu + " (Tiết " + (start === current ? start : start + "-" + current) + ")");
+                                scheduleObj.push({ Thu: thu, TietBatDau: start, SoTiet: current - start + 1 });
+                                start = tiets[i]; current = start;
+                            }
+                        }
+                        resultArr.push(strThu + " (Tiết " + (start === current ? start : start + "-" + current) + ")");
+                        scheduleObj.push({ Thu: thu, TietBatDau: start, SoTiet: current - start + 1 });
+                    }
+                }
+                var finalStr = resultArr.join(" | ");
+                $('#ThoiKhoaBieu').val(finalStr);
+                $('#LichHocJson').val(JSON.stringify(scheduleObj));
+                $('#txtKetQuaTkb').text(finalStr === "" ? "Chưa chọn tiết học" : finalStr);
+            }
+
+            $('#formLhp').on('submit', function(e) {
+                if ($('.cell-selected').length === 0) { alert('⛔ Bạn chưa chọn tiết học!'); e.preventDefault(); return false; }
+            });
+        });
+    </script>
+}

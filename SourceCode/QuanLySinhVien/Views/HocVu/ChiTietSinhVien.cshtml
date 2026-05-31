@@ -1,0 +1,338 @@
+﻿@model QuanLySinhVien.Models.ViewModels.ChiTietHocVuSinhVienViewModel
+
+@{
+    ViewData["Title"] = "Chi tiết học vụ sinh viên";
+}
+
+<style>
+    .detail-page .card-custom {
+        border: 0;
+        border-radius: 16px;
+        box-shadow: 0 6px 18px rgba(15, 23, 42, .08);
+        overflow: hidden;
+    }
+
+    .detail-page .hero {
+        border-radius: 18px;
+        background: linear-gradient(135deg, #2563eb, #38bdf8);
+        color: #fff;
+        box-shadow: 0 8px 24px rgba(37, 99, 235, .2);
+    }
+
+    .detail-page .hero-title {
+        font-size: 1.45rem;
+        font-weight: 800;
+    }
+
+    .detail-page .stat-box {
+        border-radius: 14px;
+        padding: 16px;
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        height: 100%;
+    }
+
+    .detail-page .stat-number {
+        font-size: 1.55rem;
+        font-weight: 800;
+        color: #111827;
+    }
+
+    .detail-page .stat-label {
+        color: #64748b;
+        font-size: .85rem;
+    }
+
+    .detail-page .chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: #f3f4f6;
+        color: #374151;
+        font-size: .82rem;
+        font-weight: 700;
+        margin-right: 6px;
+        margin-bottom: 6px;
+    }
+
+    .detail-page .table thead th {
+        background: #f8fafc;
+        color: #475569;
+        font-size: .78rem;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .detail-page .empty-state {
+        text-align: center;
+        color: #64748b;
+        padding: 32px;
+    }
+</style>
+
+<div class="detail-page">
+
+    <div class="hero p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-start flex-wrap">
+            <div>
+                <div class="hero-title">
+                    <i class="fas fa-user-graduate mr-2"></i>
+                    Chi tiết học vụ sinh viên
+                </div>
+                <div class="mt-1">
+                    Xem điểm, môn rớt, lý do cảnh báo và lớp học phần gợi ý học lại.
+                </div>
+            </div>
+
+            <div class="mt-3 mt-md-0">
+                <a asp-controller="HocVu"
+                       asp-action="Index"
+                       class="btn btn-light font-weight-bold">
+                    <i class="fas fa-arrow-left mr-1"></i>
+                    Quay lại Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card card-custom mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start flex-wrap">
+                <div>
+                    <h4 class="font-weight-bold mb-1">
+                        @Model.Mssv - @Model.HoTen
+                    </h4>
+
+                    <div class="text-muted">
+                        Lớp: @Model.Lop
+                        @if (!string.IsNullOrWhiteSpace(Model.KhoaHoc))
+                        {
+                            <span>| Khóa: @Model.KhoaHoc</span>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.Khoa))
+                        {
+                            <span>| Khoa: @Model.Khoa</span>
+                        }
+                    </div>
+
+                    <div class="mt-2">
+                        <span class="chip">
+                            <i class="fas fa-calendar-alt mr-1"></i>
+                            @Model.TenHocKy
+                        </span>
+
+                        <span class="chip">
+                            <i class="fas fa-chart-line mr-1"></i>
+                            ĐTB: @(Model.DiemTrungBinh?.ToString("0.00") ?? "-")
+                        </span>
+
+                        <span class="chip">
+                            <i class="fas fa-percentage mr-1"></i>
+                            Tỉ lệ qua: @Model.TiLeQuaMon%
+                        </span>
+                    </div>
+                </div>
+
+                <div class="text-right mt-3 mt-md-0">
+                    <span class="badge badge-@Model.CssClass p-2">
+                        @Model.MucCanhBao
+                    </span>
+                    <div class="text-muted small mt-2">
+                        @Model.LyDoCanhBao
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-2 col-6 mb-3">
+            <div class="stat-box">
+                <div class="stat-number">@Model.SoMonDangKy</div>
+                <div class="stat-label">Môn đăng ký</div>
+            </div>
+        </div>
+
+        <div class="col-md-2 col-6 mb-3">
+            <div class="stat-box">
+                <div class="stat-number">@Model.SoMonDaCoDiem</div>
+                <div class="stat-label">Đã có điểm</div>
+            </div>
+        </div>
+
+        <div class="col-md-2 col-6 mb-3">
+            <div class="stat-box">
+                <div class="stat-number text-success">@Model.SoMonQua</div>
+                <div class="stat-label">Môn đạt</div>
+            </div>
+        </div>
+
+        <div class="col-md-2 col-6 mb-3">
+            <div class="stat-box">
+                <div class="stat-number text-danger">@Model.SoMonRot</div>
+                <div class="stat-label">Môn rớt</div>
+            </div>
+        </div>
+
+        <div class="col-md-2 col-6 mb-3">
+            <div class="stat-box">
+                <div class="stat-number text-secondary">@Model.SoMonChuaCoDiem</div>
+                <div class="stat-label">Chưa điểm</div>
+            </div>
+        </div>
+
+        <div class="col-md-2 col-6 mb-3">
+            <div class="stat-box">
+                <div class="stat-number text-warning">@Model.TongTinChiRot</div>
+                <div class="stat-label">Tín chỉ rớt</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card card-custom mb-4">
+        <div class="card-header bg-white">
+            <div class="font-weight-bold">
+                <i class="fas fa-table text-primary mr-1"></i>
+                Danh sách môn học và kết quả
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Môn học</th>
+                            <th>Lớp HP</th>
+                            <th>Học kỳ</th>
+                            <th class="text-center">TC</th>
+                            <th class="text-center">QT</th>
+                            <th class="text-center">Thi</th>
+                            <th class="text-center">Tổng kết</th>
+                            <th>Xếp loại</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var mon in Model.DanhSachMonHoc)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="font-weight-bold">@mon.MaMon</div>
+                                    <div class="text-muted small">@mon.TenMon</div>
+                                </td>
+                                <td>@mon.MaLhp</td>
+                                <td>@mon.TenHocKy</td>
+                                <td class="text-center">@mon.SoTinChi</td>
+                                <td class="text-center">@(mon.DiemQt?.ToString("0.0") ?? "-")</td>
+                                <td class="text-center">@(mon.DiemThi?.ToString("0.0") ?? "-")</td>
+                                <td class="text-center font-weight-bold">@(mon.DiemTongKet?.ToString("0.0") ?? "-")</td>
+                                <td>@(string.IsNullOrWhiteSpace(mon.XepLoai) ? "-" : mon.XepLoai)</td>
+                                <td>
+                                    <span class="badge badge-@mon.BadgeClass">
+                                        @mon.TrangThaiText
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+
+                        @if (!Model.DanhSachMonHoc.Any())
+                        {
+                            <tr>
+                                <td colspan="9">
+                                    <div class="empty-state">
+                                        Không có dữ liệu môn học.
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card card-custom">
+        <div class="card-header bg-white">
+            <div class="font-weight-bold">
+                <i class="fas fa-redo-alt text-warning mr-1"></i>
+                Môn cần học lại và lớp học phần gợi ý
+            </div>
+        </div>
+
+        <div class="card-body">
+            @if (Model.MonCanHocLai.Any())
+            {
+                <div class="row">
+                    @foreach (var mon in Model.MonCanHocLai)
+                    {
+                        <div class="col-lg-4 col-md-6 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <div class="font-weight-bold text-danger">
+                                    @mon.MaMon - @mon.TenMon
+                                </div>
+
+                                <div class="text-muted small mt-1">
+                                    Điểm: @(mon.DiemTongKet?.ToString("0.0") ?? "-")
+                                    |
+                                    Xếp loại: @(string.IsNullOrWhiteSpace(mon.XepLoai) ? "-" : mon.XepLoai)
+                                </div>
+
+                                <hr />
+
+                                @if (mon.LopHocPhanGoiY.Any())
+                                {
+                                    foreach (var lhp in mon.LopHocPhanGoiY)
+                                    {
+                                        <div class="bg-light border rounded p-2 mb-2">
+                                            <div class="d-flex justify-content-between">
+                                                <div class="font-weight-bold text-primary">
+                                                    @lhp.MaLhp
+                                                </div>
+                                                <span class="badge badge-success">
+                                                    Còn @lhp.SoChoConLai/@lhp.SiSoToiDa
+                                                </span>
+                                            </div>
+
+                                            <div class="text-muted small">
+                                                <i class="fas fa-calendar-alt mr-1"></i>
+                                                @lhp.TenHocKy
+                                            </div>
+
+                                            <div class="text-muted small">
+                                                <i class="fas fa-clock mr-1"></i>
+                                                @lhp.LichHoc
+                                            </div>
+
+                                            @if (!string.IsNullOrWhiteSpace(lhp.PhongHoc))
+                                            {
+                                                <div class="text-muted small">
+                                                    <i class="fas fa-door-open mr-1"></i>
+                                                    Phòng: @lhp.PhongHoc
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="alert alert-light border mb-0">
+                                        Chưa có lớp học phần đang/sắp mở.
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="empty-state">
+                    Sinh viên chưa có môn rớt cần học lại.
+                </div>
+            }
+        </div>
+    </div>
+</div>
